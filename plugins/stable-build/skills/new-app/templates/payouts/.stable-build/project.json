@@ -1,0 +1,6 @@
+{
+  "template": "payouts",
+  "templateVersion": 1,
+  "network": "testnet",
+  "app": "{{APP_NAME}}"
+}

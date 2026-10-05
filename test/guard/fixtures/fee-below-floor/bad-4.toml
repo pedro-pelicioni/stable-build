@@ -1,0 +1,4 @@
+[profile.default]
+src = "src"
+out = "out"
+gas_price = 1000000000

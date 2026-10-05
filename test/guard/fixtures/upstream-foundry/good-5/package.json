@@ -1,0 +1,8 @@
+{
+  "name": "demo",
+  "private": true,
+  "scripts": {
+    "test:contracts": "FOUNDRY_PROFILE=arc arc-forge test",
+    "node": "arc-anvil --fork-url $ARC_RPC_URL"
+  }
+}

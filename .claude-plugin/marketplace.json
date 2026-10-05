@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "stable-build",
+  "owner": {
+    "name": "stable-build contributors",
+    "url": "https://github.com/pedro-pelicioni/stable-build"
+  },
+  "description": "Community skills, an opt-in edit-time guard and docs MCP config for apps built on Arc, for Claude Code and Codex. Not affiliated with Circle.",
+  "plugins": [
+    {
+      "name": "stable-build",
+      "source": "./plugins/stable-build",
+      "description": "Builder journey for apps built on Arc: find an idea, scaffold a starter, catch Arc gotchas while editing, and check go-live readiness. Includes role skills for planning and review.",
+      "category": "development",
+      "tags": ["arc", "usdc", "stablecoin", "payments", "web3"]
+    },
+    {
+      "name": "stable-build-mcp",
+      "source": "./plugins/stable-build-mcp",
+      "description": "Optional. Adds two remote HTTP MCP servers: Arc docs search (docs.arc.io/mcp) and Circle's codegen docs server (api.circle.com/v1/codegen/mcp). Both are anonymous and read-only.",
+      "category": "development",
+      "tags": ["arc", "usdc", "mcp", "docs"]
+    }
+  ]
+}

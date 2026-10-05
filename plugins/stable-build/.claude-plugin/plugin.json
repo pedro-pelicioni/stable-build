@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "stable-build",
+  "displayName": "stable-build",
+  "version": "0.1.0",
+  "description": "Community builder kit for apps built on Arc: idea finder, payouts starter, Arc gotcha guard (opt-in), go-live checklist and role skills. Not affiliated with Circle.",
+  "author": {
+    "name": "stable-build contributors",
+    "url": "https://github.com/pedro-pelicioni/stable-build"
+  },
+  "homepage": "https://github.com/pedro-pelicioni/stable-build",
+  "repository": "https://github.com/pedro-pelicioni/stable-build",
+  "license": "MIT",
+  "keywords": ["arc", "usdc", "stablecoin", "payments", "web3"]
+}

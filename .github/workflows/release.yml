@@ -1,0 +1,93 @@
+name: release
+
+# Runs when a maintainer pushes a tag such as v0.1.0. It checks that every manifest carries
+# the tag's version, re-runs the checks, and creates a DRAFT GitHub release with install.sh
+# and its SHA-256. A maintainer reviews the draft and publishes it by hand.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  CLAUDE_CODE_VERSION: "2.1.280"
+  DISABLE_AUTOUPDATER: "1"
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Versions match the tag in every manifest and CHANGELOG
+        run: node tools/check-names.mjs --release-tag "$GITHUB_REF_NAME"
+
+      - name: Tests and generated files
+        run: |
+          set -euo pipefail
+          npm test
+          node tools/build-catalog.mjs --check
+          node tools/check-links.mjs --offline
+          node tools/check-docs-sync.mjs
+          bash -n install.sh
+
+      - name: claude plugin validate --strict
+        run: |
+          set -euo pipefail
+          command -v claude >/dev/null 2>&1 || npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+          HOME="$(mktemp -d)"
+          export HOME
+          export CLAUDE_CONFIG_DIR="$HOME/.claude" CODEX_HOME="$HOME/.codex" STABLE_BUILD_HOME="$HOME/.stable-build"
+          claude plugin validate --strict .
+          for p in plugins/*/; do claude plugin validate --strict "$p"; done
+
+      - name: Build release assets
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/assets"
+          cp install.sh "$RUNNER_TEMP/assets/install.sh"
+          (cd "$RUNNER_TEMP/assets" && sha256sum install.sh > install.sh.sha256 && cat install.sh.sha256)
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[?v?" v "\\]?([ ]|$)" { on = 1; next }
+            on && /^## / { exit }
+            on { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          if [ ! -s "$RUNNER_TEMP/notes.md" ]; then echo "::error::no CHANGELOG.md section for $version"; exit 1; fi
+          {
+            echo
+            echo "Verify the installer before running it:"
+            echo
+            echo '```sh'
+            echo "curl -fsSLO https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/install.sh"
+            echo "curl -fsSLO https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/install.sh.sha256"
+            echo "shasum -a 256 -c install.sh.sha256 && bash install.sh --ref=${GITHUB_REF_NAME}"
+            echo '```'
+          } >> "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$GITHUB_REF_NAME" \
+            "$RUNNER_TEMP/assets/install.sh" "$RUNNER_TEMP/assets/install.sh.sha256" \
+            --draft --verify-tag \
+            --title "stable-build $GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/notes.md"

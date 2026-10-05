@@ -1,0 +1,18 @@
+{
+  "name": "stable-build",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Development scripts for the stable-build marketplace (community kit for apps built on Arc). Not a published package.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pedro-pelicioni/stable-build.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\" \"plugins/*/scripts/**/*.test.mjs\" \"plugins/*/skills/*/scripts/**/*.test.mjs\"",
+    "check": "node tools/check-names.mjs && node tools/build-catalog.mjs --check && node tools/check-links.mjs --offline && node tools/check-docs-sync.mjs"
+  }
+}

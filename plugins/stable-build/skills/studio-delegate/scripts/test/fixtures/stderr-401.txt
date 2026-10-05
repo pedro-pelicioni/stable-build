@@ -1,0 +1,1 @@
+arc-studio: Not authenticated against ${STUDIO} — run `arc-studio login`.

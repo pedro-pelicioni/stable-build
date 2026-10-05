@@ -1,0 +1,238 @@
+#!/usr/bin/env node
+// Test double for the `claude` CLI, used by test/install/roundtrip.sh.
+//
+// Appends every argv to $SB_FAKE_LOG and emulates the subcommands install.sh uses, keeping
+// state under $CLAUDE_CONFIG_DIR (default $HOME/.claude) the way Claude Code 2.1.280 does:
+//   plugins/known_marketplaces.json, plugins/installed_plugins.json, settings.json
+//   (enabledPlugins / extraKnownMarketplaces, left as {} when emptied), plugins/marketplaces/<name>
+//   (clone of a GitHub source), plugins/cache/<mkt>/<plugin>/<version> (".orphaned_at" on uninstall).
+// GitHub sources "owner/repo[@ref]" resolve to fixture directories $SB_FAKE_REPOS/owner/repo.
+// $SB_FAKE_USER_MCP lists user-scope MCP server names reported by `claude mcp get`.
+// $SB_FAKE_CLAUDE_VERSION overrides the reported version.
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+const argv = process.argv.slice(2);
+if (process.env.SB_FAKE_LOG) fs.appendFileSync(process.env.SB_FAKE_LOG, ['claude', ...argv].join(' ') + '\n');
+
+const home = process.env.HOME || '/nonexistent';
+const cfgDir = process.env.CLAUDE_CONFIG_DIR || path.join(home, '.claude');
+const pluginsDir = path.join(cfgDir, 'plugins');
+const F = {
+  known: path.join(pluginsDir, 'known_marketplaces.json'),
+  installed: path.join(pluginsDir, 'installed_plugins.json'),
+  settings: path.join(cfgDir, 'settings.json'),
+};
+
+const readJSON = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
+const writeJSON = (f, v) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(v, null, 2) + '\n'); };
+const say = (s) => process.stdout.write(s + '\n');
+function fail(msg, code) { process.stderr.write(msg + '\n'); process.exit(code || 1); }
+function copyDir(src, dst) {
+  fs.rmSync(dst, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  fs.cpSync(src, dst, { recursive: true });
+}
+const args = argv.slice();
+function takeOpt(name) { const i = args.indexOf(name); if (i < 0) return undefined; const v = args[i + 1]; args.splice(i, 2); return v; }
+function takeFlag(...names) { let hit = false; for (const n of names) { const i = args.indexOf(n); if (i >= 0) { args.splice(i, 1); hit = true; } } return hit; }
+const known = () => readJSON(F.known, {});
+const installed = () => readJSON(F.installed, { version: 2, plugins: {} });
+function editSettings(fn) { const s = readJSON(F.settings, {}); fn(s); writeJSON(F.settings, s); }
+const nowIso = () => new Date().toISOString();
+
+function resolveSource(src) {
+  if (/^(\/|\.\/|\.\.\/|~\/|\.$|\.\.$)/.test(src)) {
+    const p = path.resolve(src.replace(/^~(?=\/)/, home));
+    if (!fs.existsSync(p)) fail(`Marketplace path does not exist: ${p}`);
+    return { source: { source: 'directory', path: p }, dir: p, local: true };
+  }
+  const m = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)(?:[@#]([A-Za-z0-9_./-]+))?$/.exec(src);
+  if (!m) fail('Invalid marketplace source format. Try: owner/repo, https://..., or ./path');
+  const dir = path.join(process.env.SB_FAKE_REPOS || '/nonexistent', m[1], m[2]);
+  if (!fs.existsSync(dir)) fail(`Failed to clone marketplace repository ${m[1]}/${m[2]} (fake: no fixture at ${dir})`);
+  const source = { source: 'github', repo: `${m[1]}/${m[2]}` };
+  if (m[3]) source.ref = m[3];
+  return { source, dir, local: false };
+}
+function marketplaceManifest(dir) {
+  const mf = readJSON(path.join(dir, '.claude-plugin', 'marketplace.json'), null);
+  if (!mf || !mf.name) fail(`No .claude-plugin/marketplace.json in ${dir}`);
+  return mf;
+}
+function uninstallPlugin(id) {
+  const inst = installed();
+  const recs = inst.plugins[id];
+  if (!recs) return false;
+  for (const r of recs) {
+    if (r.installPath && fs.existsSync(r.installPath)) fs.writeFileSync(path.join(r.installPath, '.orphaned_at'), String(Date.now()));
+  }
+  delete inst.plugins[id];
+  writeJSON(F.installed, inst);
+  editSettings((s) => { s.enabledPlugins = s.enabledPlugins || {}; delete s.enabledPlugins[id]; });
+  return true;
+}
+function installPlugin(id, { update } = {}) {
+  const [name, mkt] = id.split('@');
+  if (!update && (installed().plugins[id] || [])[0]) { say(`Plugin "${id}" is already installed (scope: user)`); return; }
+  const km = known()[mkt];
+  if (!km) fail(`Plugin "${id}" not found: marketplace "${mkt}" is not configured`);
+  // A directory marketplace whose folder vanished cannot be read (how real Claude Code reports it: UNVERIFIED).
+  const mf = marketplaceManifest(km.installLocation);
+  const entry = (mf.plugins || []).find((p) => p.name === name);
+  if (!entry) fail(`Plugin "${name}" not found in marketplace "${mkt}"`);
+  const srcDir = path.resolve(km.installLocation, typeof entry.source === 'string' ? entry.source : entry.source.path);
+  const pj = readJSON(path.join(srcDir, '.claude-plugin', 'plugin.json'), {});
+  const version = entry.version || pj.version || 'unknown';
+  const inst = installed();
+  const cur = (inst.plugins[id] || [])[0];
+  if (cur && update && cur.version === version) { say(`${name} is already at the latest version (${version}).`); return; }
+  const dst = path.join(pluginsDir, 'cache', mkt, name, version);
+  copyDir(srcDir, dst);
+  if (cur && cur.installPath !== dst && fs.existsSync(cur.installPath)) fs.writeFileSync(path.join(cur.installPath, '.orphaned_at'), String(Date.now()));
+  inst.plugins[id] = [{ scope: 'user', installPath: dst, version, installedAt: cur ? cur.installedAt : nowIso(), lastUpdated: nowIso() }];
+  writeJSON(F.installed, inst);
+  editSettings((s) => { s.enabledPlugins = s.enabledPlugins || {}; s.enabledPlugins[id] = true; });
+  say(update ? `Plugin "${id}" updated to ${version}` : `Successfully installed plugin: ${id} (scope: user)`);
+}
+
+const [a0, a1, a2] = args;
+if (a0 === '--version' || a0 === '-v') { say(`${process.env.SB_FAKE_CLAUDE_VERSION || '2.1.280'} (Claude Code)`); process.exit(0); }
+
+if (a0 === 'plugin' || a0 === 'plugins') {
+  if (a1 === '--help' || a1 === '-h' || a1 === undefined) { say('Usage: claude plugin [command] (fake)'); process.exit(0); }
+  if (a1 === 'marketplace') {
+    if (a2 === '--help' || a2 === undefined) { say('Usage: claude plugin marketplace (fake)'); process.exit(0); }
+    args.splice(0, 3);
+    if (a2 === 'list') {
+      takeFlag('--json');
+      const out = Object.entries(known()).map(([name, m]) => {
+        const e = { name, source: m.source.source };
+        if (m.source.repo) e.repo = m.source.repo;
+        if (m.source.ref) e.ref = m.source.ref;
+        if (m.source.path) e.path = m.source.path;
+        e.installLocation = m.installLocation;
+        return e;
+      });
+      say(JSON.stringify(out, null, 2));
+      process.exit(0);
+    }
+    if (a2 === 'add') {
+      takeOpt('--scope');
+      const src = args[0];
+      if (!src) fail('error: missing required argument source');
+      const r = resolveSource(src);
+      const mf = marketplaceManifest(r.dir);
+      const k = known();
+      if (k[mf.name]) { say(`Marketplace '${mf.name}' already on disk — declared in user settings`); process.exit(0); }
+      let loc = r.dir;
+      if (!r.local) { loc = path.join(pluginsDir, 'marketplaces', mf.name); copyDir(r.dir, loc); }
+      k[mf.name] = { source: r.source, installLocation: loc, lastUpdated: nowIso() };
+      writeJSON(F.known, k);
+      editSettings((s) => { s.extraKnownMarketplaces = s.extraKnownMarketplaces || {}; s.extraKnownMarketplaces[mf.name] = { source: r.source }; });
+      say(`Successfully added marketplace: ${mf.name} (declared in user settings)`);
+      process.exit(0);
+    }
+    if (a2 === 'remove' || a2 === 'rm') {
+      const scope = takeOpt('--scope');
+      const name = args[0];
+      const k = known();
+      if (!k[name]) fail(`Failed to remove marketplace: Marketplace '${name}' not found`);
+      if (scope) {
+        // Claude Code 2.1.280 (verified): a scoped remove drops only the settings declaration;
+        // the marketplace stays in known_marketplaces.json and in `marketplace list`.
+        editSettings((s) => { s.extraKnownMarketplaces = s.extraKnownMarketplaces || {}; delete s.extraKnownMarketplaces[name]; });
+        say(`Successfully removed marketplace: ${name} (from ${scope} settings)`);
+        process.exit(0);
+      }
+      const gone = Object.keys(installed().plugins).filter((id) => id.endsWith('@' + name));
+      for (const id of gone) uninstallPlugin(id);
+      if (k[name].source.source === 'github') fs.rmSync(k[name].installLocation, { recursive: true, force: true });
+      delete k[name];
+      writeJSON(F.known, k);
+      editSettings((s) => { s.extraKnownMarketplaces = s.extraKnownMarketplaces || {}; delete s.extraKnownMarketplaces[name]; });
+      say(`Successfully removed marketplace: ${name}`);
+      if (gone.length) say(`Also uninstalled ${gone.length} plugins from this marketplace: ${gone.join(', ')}`);
+      process.exit(0);
+    }
+    if (a2 === 'update') {
+      const k = known();
+      const names = args[0] ? [args[0]] : Object.keys(k);
+      for (const name of names) {
+        const m = k[name];
+        if (!m) fail(`Marketplace '${name}' not found`);
+        if (m.source.source === 'github') { const r = resolveSource(m.source.repo + (m.source.ref ? '@' + m.source.ref : '')); copyDir(r.dir, m.installLocation); }
+        m.lastUpdated = nowIso();
+      }
+      writeJSON(F.known, k);
+      say(`Successfully updated marketplace: ${names.join(', ')}`);
+      process.exit(0);
+    }
+    fail(`fake claude: unsupported: ${argv.join(' ')}`, 64);
+  }
+  args.splice(0, 2);
+  if (a1 === 'list') {
+    takeFlag('--json');
+    const out = [];
+    for (const [id, recs] of Object.entries(installed().plugins)) {
+      for (const r of recs) out.push({ id, version: r.version, scope: r.scope, enabled: true, installPath: r.installPath, installedAt: r.installedAt, lastUpdated: r.lastUpdated });
+    }
+    say(JSON.stringify(out, null, 2));
+    process.exit(0);
+  }
+  if (a1 === 'install' || a1 === 'i') {
+    takeOpt('--scope'); takeOpt('-s'); takeFlag('-y', '--yes');
+    if (!args[0] || !args[0].includes('@')) fail('fake claude: use plugin@marketplace');
+    installPlugin(args[0]);
+    process.exit(0);
+  }
+  if (a1 === 'uninstall' || a1 === 'remove' || a1 === 'rm') {
+    takeOpt('--scope'); takeOpt('-s'); takeFlag('-y', '--yes', '--keep-data');
+    if (!uninstallPlugin(args[0])) fail(`Failed to uninstall plugin "${args[0]}": Plugin "${args[0]}" not found in installed plugins`);
+    say(`Successfully uninstalled plugin: ${String(args[0]).split('@')[0]} (scope: user)`);
+    process.exit(0);
+  }
+  if (a1 === 'update') {
+    takeOpt('--scope'); takeOpt('-s'); takeFlag('-y', '--yes');
+    if (!installed().plugins[args[0]]) fail(`Failed to update plugin "${args[0]}": not installed`);
+    installPlugin(args[0], { update: true });
+    process.exit(0);
+  }
+  if (a1 === 'validate') { say('Validation passed (fake)'); process.exit(0); }
+  fail(`fake claude: unsupported: ${argv.join(' ')}`, 64);
+}
+
+if (a0 === 'mcp') {
+  const userMcp = (process.env.SB_FAKE_USER_MCP || '').split(/\s+/).filter(Boolean);
+  if (a1 === 'get') {
+    const pm = /^plugin:([^:]+):(.+)$/.exec(a2 || '');
+    if (pm) {
+      for (const [id, recs] of Object.entries(installed().plugins)) {
+        if (id.split('@')[0] !== pm[1]) continue;
+        const mcp = readJSON(path.join(recs[0].installPath, '.mcp.json'), null);
+        const def = mcp && mcp.mcpServers && mcp.mcpServers[pm[2]];
+        if (def) {
+          say(`${a2}:\n  Scope: Dynamic config (from command line)\n  Status: ✔ Connected\n  Type: http\n  URL: ${def.url}`);
+          process.exit(0);
+        }
+      }
+    }
+    if (userMcp.includes(a2)) {
+      say(`${a2}:\n  Scope: User config (available in all your projects)\n  Status: ✔ Connected\n  Type: http\n  URL: https://example.invalid/mcp`);
+      process.exit(0);
+    }
+    say(`No MCP server named "${a2}". Run \`claude mcp add\` to add one.`);
+    process.exit(1);
+  }
+  if (a1 === 'list') {
+    for (const n of userMcp) say(`${n}: https://example.invalid/mcp (HTTP) - ✔ Connected`);
+    for (const [id, recs] of Object.entries(installed().plugins)) {
+      const mcp = readJSON(path.join(recs[0].installPath, '.mcp.json'), null);
+      if (!mcp || !mcp.mcpServers) continue;
+      for (const [srv, def] of Object.entries(mcp.mcpServers)) say(`plugin:${id.split('@')[0]}:${srv}: ${def.url} (HTTP) - ✔ Connected`);
+    }
+    process.exit(0);
+  }
+}
+fail(`fake claude: unsupported: ${argv.join(' ')}`, 64);

@@ -1,0 +1,329 @@
+{
+  "schema_version": 1,
+  "source_id": "arc-rfb",
+  "source": "Arc Request for Builders (Team Arc, published 2026-09-16), paraphrased by stable-build contributors",
+  "source_url": "https://www.arc.io/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money",
+  "license": "Our own paraphrase (MIT). The RFB itself has no license; read it at source_url. Block facts link to docs.arc.io or developers.circle.com.",
+  "notes": "items[] are the RFB's four frontiers in our words. rfb_start_with lists what the RFB suggests starting with; today.blocks lists what is usable now. blocks[] status: live | permissioned (access must be granted) | testnet-only | roadmap (not available; never a required block). Re-check a block through the arc-docs MCP before relying on it.",
+  "published_at": "2026-09-16",
+  "retrieved_at": "2026-10-04T23:00:00Z",
+  "count": 4,
+  "items": [
+    {
+      "id": "global-money",
+      "n": 1,
+      "rfb_heading": "Global money and embedded finance",
+      "summary": "Dollars, FX and payments built so deep into a product that the user never has to think about how the money moves.",
+      "opportunities": [
+        {
+          "id": "local-market-platforms",
+          "name": "Local-market finance apps",
+          "idea": "A product for one country, corridor or community that bundles dollar access, FX, savings and payments; local licensing, distribution and UX are the edge."
+        },
+        {
+          "id": "programmable-trade",
+          "name": "Programmable trade workflows",
+          "idea": "Commercial agreements as code: milestone releases, dispute handling and conditional settlement paid in USDC."
+        },
+        {
+          "id": "borderless-payroll",
+          "name": "Borderless payroll",
+          "idea": "An employer tool that covers onboarding, local compliance, tax and funding, so paying a team spread across many countries is one routine.",
+          "starter": "payouts"
+        }
+      ],
+      "rfb_start_with": ["app-kits", "stablefx"],
+      "today": {
+        "blocks": ["usdc", "eurc", "app-kits", "memo", "multicall3from", "cctp", "circle-wallets", "stablefx"],
+        "note": "StableFX is permissioned for vetted institutions; for most builders, FX starts with the App Kit Swap capability."
+      },
+      "docs": [
+        "https://docs.arc.io/build/payments",
+        "https://docs.arc.io/build/stablecoin-fx",
+        "https://docs.arc.io/build/ecommerce",
+        "https://docs.arc.io/arc/tutorials/send-usdc-with-transaction-memo",
+        "https://docs.arc.io/arc/tutorials/batch-usdc-transfers"
+      ],
+      "blueprints": [
+        "https://www.arc.io/blog/how-arc-supports-cross-border-payments-arc-blueprints",
+        "https://www.arc.io/blog/how-arc-supports-treasury-management-arc-blueprints"
+      ],
+      "source_url": "https://www.arc.io/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money",
+      "retrieved_at": "2026-10-04T23:00:00Z"
+    },
+    {
+      "id": "agentic-economy",
+      "n": 2,
+      "rfb_heading": "The agentic economy",
+      "summary": "Agents can already hold and spend USDC. Missing: businesses that agents run, markets that pay for agent work, and cover for when agents get it wrong.",
+      "opportunities": [
+        {
+          "id": "autonomous-businesses",
+          "name": "Agent-run businesses",
+          "idea": "A small team of agents with a USDC treasury on Arc that buys the services it needs and settles its own costs onchain, with no staff."
+        },
+        {
+          "id": "outcome-marketplaces",
+          "name": "Outcome marketplaces",
+          "idea": "Post a goal with a USDC bounty; an agent or a person delivers; payment is released only when the result is checked against an agreed standard."
+        },
+        {
+          "id": "agentic-insurance",
+          "name": "Cover for agent failures",
+          "idea": "Parametric cover for losses caused by agents moving funds (deposits, swaps, rebalances), with a clear premium schedule and a claims path that pays.",
+          "caution": "Insurance is regulated in most places; this kit gives no legal advice."
+        }
+      ],
+      "rfb_start_with": ["agent-stack"],
+      "today": {
+        "blocks": ["agent-stack", "nanopayments", "gateway", "erc-8004", "erc-8183", "usdc"],
+        "note": "ERC-8183 jobs are documented as a testnet tutorial; mainnet deployment is UNVERIFIED."
+      },
+      "docs": [
+        "https://docs.arc.io/build/agentic-economy",
+        "https://docs.arc.io/arc/tutorials/register-your-first-ai-agent",
+        "https://docs.arc.io/arc/tutorials/create-your-first-erc-8183-job",
+        "https://developers.circle.com/agent-stack"
+      ],
+      "blueprints": ["https://www.arc.io/blog/how-arc-supports-the-agentic-economy-arc-blueprints"],
+      "source_url": "https://www.arc.io/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money",
+      "retrieved_at": "2026-10-04T23:00:00Z"
+    },
+    {
+      "id": "onchain-credit",
+      "n": 3,
+      "rfb_heading": "Onchain credit and collateral",
+      "summary": "Putting assets onchain is solved. Lending against them still needs collateral a lender can verify, privacy that still allows disclosure, and risk models institutions accept.",
+      "opportunities": [
+        {
+          "id": "collateral-apis",
+          "name": "Collateral APIs",
+          "idea": "A service that lets a brokerage, neobank or consumer app offer USDC credit against assets its users already hold, with the position monitored onchain."
+        },
+        {
+          "id": "long-tail-credit",
+          "name": "Long-tail credit markets",
+          "idea": "Credit for fragmented assets such as equipment, trade receivables or royalties, opened to lenders who cannot reach them today."
+        },
+        {
+          "id": "embedded-protection",
+          "name": "Embedded protection",
+          "idea": "Cover for smart-contract or collateral loss built into USDC deposit and lending flows, with coverage data in a standard format.",
+          "caution": "Credit and insurance are regulated activities; this kit gives no legal or financial advice."
+        }
+      ],
+      "rfb_start_with": ["arc-privacy", "app-kits"],
+      "today": {
+        "blocks": ["app-kits", "usdc", "cctp", "gateway", "circle-wallets"],
+        "note": "Arc Privacy is on the roadmap and not available. Start with public contracts and the App Kit Borrow capability; keep data that would need privacy offchain for now."
+      },
+      "docs": [
+        "https://docs.arc.io/build/borrow-and-lend",
+        "https://docs.arc.io/app-kit/borrow",
+        "https://docs.arc.io/arc/concepts/opt-in-privacy"
+      ],
+      "blueprints": [
+        "https://www.arc.io/blog/how-arc-supports-lending-and-borrowing-arc-blueprints",
+        "https://www.arc.io/blog/how-arc-supports-onchain-credit-markets-arc-blueprints",
+        "https://www.arc.io/blog/how-arc-supports-asset-tokenization-arc-blueprints",
+        "https://www.arc.io/blog/how-arc-supports-capital-markets-settlement-arc-blueprints"
+      ],
+      "source_url": "https://www.arc.io/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money",
+      "retrieved_at": "2026-10-04T23:00:00Z"
+    },
+    {
+      "id": "intelligent-account",
+      "n": 4,
+      "rfb_heading": "The intelligent account",
+      "summary": "Personal money that runs itself: one programmable balance that pays, saves and hands bounded tasks to agents, with the user approving only the exceptions.",
+      "opportunities": [
+        {
+          "id": "personal-office",
+          "name": "Household finance office",
+          "idea": "One programmable balance for a family's cash, bills, subscriptions and savings, with routine decisions automated and the user stepping in only when needed."
+        },
+        {
+          "id": "themed-baskets",
+          "name": "Themed baskets",
+          "idea": "A single interface over baskets built around a theme or a specialist manager; the user picks the exposure and the app handles the mechanics.",
+          "caution": "Touches regulated investment activity; this kit gives no investment, legal or tax advice."
+        },
+        {
+          "id": "agents-with-a-mandate",
+          "name": "Agents with a mandate",
+          "idea": "Agents that act on a user's funds inside hard limits the user sets, using Gateway to reach USDC on other supported chains without moving the agent.",
+          "caution": "Touches regulated investment activity; this kit gives no investment, legal or tax advice."
+        }
+      ],
+      "rfb_start_with": ["gateway", "app-kits", "agent-stack"],
+      "today": {
+        "blocks": ["gateway", "app-kits", "agent-stack", "circle-wallets", "nanopayments", "usdc"],
+        "note": "All three suggested blocks are live."
+      },
+      "docs": [
+        "https://docs.arc.io/app-kit/unified-balance",
+        "https://developers.circle.com/gateway",
+        "https://developers.circle.com/agent-stack"
+      ],
+      "blueprints": ["https://www.arc.io/blog/how-arc-supports-treasury-management-arc-blueprints"],
+      "source_url": "https://www.arc.io/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money",
+      "retrieved_at": "2026-10-04T23:00:00Z"
+    }
+  ],
+  "blocks": [
+    {
+      "id": "usdc",
+      "name": "USDC on Arc (native gas, 18 decimals; ERC-20 interface, 6 decimals)",
+      "status": "live",
+      "what": "One balance with two views. Fees are paid in USDC. Address 0x3600000000000000000000000000000000000000 on both networks.",
+      "source_url": "https://docs.arc.io/arc/concepts/stablecoin-native-model",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "eurc",
+      "name": "EURC",
+      "status": "live",
+      "what": "Euro stablecoin on Arc, 6 decimals. Mainnet and testnet addresses differ.",
+      "source_url": "https://docs.arc.io/arc/references/contract-addresses",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "app-kits",
+      "name": "App Kits SDK",
+      "status": "live",
+      "what": "SDK for Send, Bridge, Swap, Unified Balance, Onramp, Earn and Borrow; all seven are listed for Arc.",
+      "capabilities_on_arc": ["Send", "Bridge", "Swap", "Unified Balance", "Onramp", "Earn", "Borrow"],
+      "note": "Borrow lends USDC against cirBTC. find-idea does not build ideas on Earn: it would invite return claims, which this kit never makes.",
+      "source_url": "https://docs.arc.io/app-kit/references/supported-blockchains",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "memo",
+      "name": "Transaction memos (Memo contract)",
+      "status": "live",
+      "what": "Attach an app-defined memoId and memo bytes to a contract call such as a USDC transfer; the wallet stays msg.sender.",
+      "note": "The direct caller must be an EOA; smart accounts revert. Memo bytes are public.",
+      "source_url": "https://docs.arc.io/arc/concepts/transaction-memos",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "multicall3from",
+      "name": "Batched transactions (Multicall3From)",
+      "status": "live",
+      "what": "Batch several calls in one transaction while each subcall keeps the sending wallet as msg.sender.",
+      "note": "EOA only; no value forwarding (no aggregate3Value).",
+      "source_url": "https://docs.arc.io/arc/concepts/batched-transactions",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "cctp",
+      "name": "CCTP (Arc is domain 26)",
+      "status": "live",
+      "what": "Move USDC and EURC between Arc and other chains by burn and mint.",
+      "note": "Sends to Stellar (domain 27) must route through CctpForwarder: https://developers.circle.com/cctp/references/stellar",
+      "source_url": "https://docs.arc.io/arc/references/contract-addresses",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "gateway",
+      "name": "Circle Gateway",
+      "status": "live",
+      "what": "A unified USDC balance usable across supported chains; GatewayWallet and GatewayMinter are deployed on Arc.",
+      "source_url": "https://docs.arc.io/arc/references/contract-addresses",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "nanopayments",
+      "name": "Gateway Nanopayments (x402)",
+      "status": "live",
+      "what": "Gas-free, batched sub-cent USDC payments, for example pay-per-request APIs for agents.",
+      "note": "Supported on the EVM chains in Gateway's list; Arc is included through Gateway's Arc deployment.",
+      "source_url": "https://developers.circle.com/gateway-nanopayments/supported-networks",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "agent-stack",
+      "name": "Circle Agent Stack (Circle CLI, agent wallets, agent nanopayments)",
+      "status": "live",
+      "what": "Tooling for agents to hold USDC, pay for services and transact with spending controls. Agent Wallets list Arc on mainnet and testnet.",
+      "source_url": "https://developers.circle.com/agent-stack/agent-wallets/supported-blockchains",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "circle-wallets",
+      "name": "Circle Wallets (developer-controlled, user-controlled, modular)",
+      "status": "live",
+      "what": "Embedded wallets; Arc is supported for EOA and smart-contract account types.",
+      "note": "Memo and Multicall3From need an EOA caller.",
+      "source_url": "https://developers.circle.com/wallets/supported-blockchains",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "eip3009-relayer",
+      "name": "Gasless USDC transfers through an EIP-3009 relayer",
+      "status": "live",
+      "what": "Collect a transferWithAuthorization signature and broadcast it from your own funded relayer EOA.",
+      "source_url": "https://docs.arc.io/integrate/relayers-and-paymasters/eip-3009-relayer",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "erc4337-paymaster",
+      "name": "Self-deployed ERC-4337 paymaster",
+      "status": "live",
+      "what": "Sponsor user operations; the EntryPoint deposit is funded in native USDC (18 decimals).",
+      "source_url": "https://docs.arc.io/integrate/relayers-and-paymasters/deploy-a-paymaster",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "erc-8004",
+      "name": "ERC-8004 agent identity, reputation and validation registries",
+      "status": "live",
+      "what": "Registries deployed on Arc mainnet and testnet for agent identity and reputation.",
+      "source_url": "https://docs.arc.io/arc/references/contract-addresses",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "erc-8183",
+      "name": "ERC-8183 jobs with USDC escrow",
+      "status": "testnet-only",
+      "what": "Create a job, fund escrow in USDC, submit a deliverable hash and settle. Documented as an Arc Testnet tutorial.",
+      "note": "No mainnet address on the contract addresses page on 2026-10-04 (UNVERIFIED for mainnet).",
+      "source_url": "https://docs.arc.io/arc/tutorials/create-your-first-erc-8183-job",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "stablefx",
+      "name": "StableFX",
+      "status": "permissioned",
+      "what": "Institutional stablecoin FX engine with escrow settlement on Arc (FxEscrow).",
+      "note": "Access is for vetted institutions. Most builders should start FX with App Kit Swap.",
+      "source_url": "https://developers.circle.com/stablefx",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    },
+    {
+      "id": "arc-privacy",
+      "name": "Arc Privacy Sector (opt-in private execution)",
+      "status": "roadmap",
+      "what": "Planned confidential execution for Solidity contracts alongside the public EVM.",
+      "note": "The docs say privacy features are on the roadmap and not yet available. Never make it a required block.",
+      "source_url": "https://docs.arc.io/arc/concepts/opt-in-privacy",
+      "retrieved_at": "2026-10-04T23:00:00Z",
+      "verified_at": "2026-10-04"
+    }
+  ]
+}

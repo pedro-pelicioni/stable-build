@@ -1,0 +1,112 @@
+# Data snapshots for the stable-build plugin.
+# - check: offline validation of plugins/stable-build/data/*.json. It fails when any
+#   programs.json valid_until has passed, when an item lacks source_url/retrieved_at,
+#   when ecosystem.json holds anything but names/URLs/categories, or when data/ reaches 500 KB.
+# - refresh (weekly, or by hand): rebuilds ecosystem.json and sample-apps.json with
+#   tools/build-data.mjs (robots.txt-compliant) and opens or updates one PR with the diff.
+#   Hand-written files (sources, frontiers, programs) are never edited by the bot.
+# Repo setting needed for the PR step: Settings > Actions > General >
+# "Allow GitHub Actions to create and approve pull requests".
+name: data
+
+on:
+  schedule:
+    - cron: "23 7 * * 1" # Mondays 07:23 UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "plugins/stable-build/data/**"
+      - "tools/build-data.mjs"
+      - ".github/workflows/data.yml"
+  pull_request:
+    paths:
+      - "plugins/stable-build/data/**"
+      - "tools/build-data.mjs"
+      - ".github/workflows/data.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: check data (fails on an expired valid_until)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Validate data files
+        run: node tools/build-data.mjs --check
+
+  refresh:
+    name: refresh snapshots and open a PR
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Rebuild generated data
+        id: build
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # GitHub API metadata for the sample-app repos
+        run: |
+          {
+            echo "Weekly refresh of the generated data snapshots (\`tools/build-data.mjs\`)."
+            echo
+            echo "Review before merging:"
+            echo "- only \`ecosystem.json\` and \`sample-apps.json\` change; hand-written files are untouched"
+            echo "- ecosystem entries hold names, URLs and categories only (no descriptions or logos)"
+            echo "- new sample apps need a one-line summary in our own words, plus frontiers/blocks"
+            echo "- bot PRs made with GITHUB_TOKEN do not trigger CI; close and reopen this PR to run it"
+            echo
+          } > "$RUNNER_TEMP/summary.md"
+          set +e
+          node tools/build-data.mjs --summary="$RUNNER_TEMP/summary.md"
+          status=$?
+          set -e
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or update the data PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- plugins/stable-build/data; then
+            echo "No data changes."
+            exit 0
+          fi
+          branch=data/weekly-refresh
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$branch"
+          git add plugins/stable-build/data
+          git commit -m "data: weekly refresh of generated snapshots"
+          git push --force origin "$branch"
+          if [ "$(gh pr view "$branch" --json state --jq .state 2>/dev/null)" = "OPEN" ]; then
+            gh pr edit "$branch" --body-file "$RUNNER_TEMP/summary.md"
+          else
+            gh pr create --base main --head "$branch" \
+              --title "data: weekly refresh" --body-file "$RUNNER_TEMP/summary.md"
+          fi
+
+      - name: Fail when a job or the check failed
+        if: steps.build.outputs.status != '0'
+        run: |
+          echo "tools/build-data.mjs exited ${{ steps.build.outputs.status }}: a source failed (old file kept) or the data check failed (for example an expired valid_until). See the step log."
+          exit 1

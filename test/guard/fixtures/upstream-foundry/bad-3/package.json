@@ -1,0 +1,8 @@
+{
+  "name": "payouts-demo",
+  "private": true,
+  "scripts": {
+    "chain": "anvil --chain-id 5042002",
+    "deploy": "forge script script/Deploy.s.sol --broadcast"
+  }
+}

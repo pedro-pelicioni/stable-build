@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "source_id": "arc-docs-sample-apps",
+  "source": "docs.arc.io sample apps + GitHub repository metadata",
+  "source_url": "https://docs.arc.io/arc/references/sample-applications",
+  "license": "Index only (titles, links, tags). Each repo carries its own license (SPDX id from the GitHub API). Summaries are written by stable-build contributors; docs prose is not copied.",
+  "notes": "summary, frontiers, blocks and starters[] are hand-maintained and survive a refresh. Frontier ids refer to frontiers.json; block ids refer to frontiers.json blocks[].",
+  "fetch_mode": "bundle",
+  "retrieved_at": "2026-10-04T23:09:17.247Z",
+  "stale_after_days": 30,
+  "count": 11,
+  "items": [
+    {"title":"Arc commerce","docs_url":"https://docs.arc.io/build/sample-apps/arc-commerce","repo":"https://github.com/circlefin/arc-commerce","tags":["Next.js","Wallets"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-10-02","summary":"Users buy app credits with USDC through developer-controlled wallets; webhooks confirm settlement.","frontiers":["global-money"],"blocks":["usdc","circle-wallets"],"source_url":"https://docs.arc.io/build/sample-apps/arc-commerce","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"Arc P2P payments","docs_url":"https://docs.arc.io/build/sample-apps/arc-p2p-payments","repo":"https://github.com/circlefin/arc-p2p-payments","tags":["Modular Wallets","Passkeys"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-10-02","summary":"Person-to-person USDC payments without gas prompts, using passkey-protected modular (smart account) wallets.","frontiers":["global-money","intelligent-account"],"blocks":["circle-wallets","usdc"],"source_url":"https://docs.arc.io/build/sample-apps/arc-p2p-payments","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"Arc escrow","docs_url":"https://docs.arc.io/build/sample-apps/arc-escrow","repo":"https://github.com/circlefin/arc-escrow","tags":["Refund Protocol","AI"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-06-18","summary":"Freelance escrow where an AI checks the delivered work before USDC is released (Refund Protocol).","frontiers":["agentic-economy","global-money"],"blocks":["usdc"],"source_url":"https://docs.arc.io/build/sample-apps/arc-escrow","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"Arc nanopayments","docs_url":"https://docs.arc.io/build/sample-apps/arc-nanopayments","repo":"https://github.com/circlefin/arc-nanopayments","tags":["Nanopayments","AI"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-06-29","summary":"An agent pays per call for paywalled APIs in sub-cent USDC amounts over x402.","frontiers":["agentic-economy"],"blocks":["nanopayments","gateway"],"source_url":"https://docs.arc.io/build/sample-apps/arc-nanopayments","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"Arc e-commerce payments","docs_url":"https://docs.arc.io/build/sample-apps/arc-ecommerce-payments","repo":"https://github.com/circlefin/arc-ecommerce-payments","tags":["Commerce Payments","Next.js"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-09-29","summary":"Store checkout in USDC or EURC, held in escrow until the order completes (Commerce Payments Protocol).","frontiers":["global-money"],"blocks":["usdc","eurc"],"source_url":"https://docs.arc.io/build/sample-apps/arc-ecommerce-payments","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"USDC Onramp Demo","docs_url":"https://docs.arc.io/build/sample-apps/usdc-onramp-demo","repo":"https://github.com/circlefin/onramp-kit-demo","tags":["Onramp Kit","Next.js"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-09-16","summary":"Buy USDC by card or bank transfer and receive it in a browser wallet on Arc (App Kit Onramp).","frontiers":["global-money","intelligent-account"],"blocks":["app-kits","usdc"],"source_url":"https://docs.arc.io/build/sample-apps/usdc-onramp-demo","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"Arc multichain wallet","docs_url":"https://docs.arc.io/build/sample-apps/arc-multichain-wallet","repo":"https://github.com/circlefin/arc-multichain-wallet","tags":["Gateway","Wagmi"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-10-02","summary":"One USDC balance across chains, spent anywhere through Circle Gateway.","frontiers":["intelligent-account"],"blocks":["gateway","usdc"],"source_url":"https://docs.arc.io/build/sample-apps/arc-multichain-wallet","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"Arc fintech","docs_url":"https://docs.arc.io/build/sample-apps/arc-fintech","repo":"https://github.com/circlefin/arc-fintech","tags":["Bridge Kit","Gateway"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-09-16","summary":"Treasury console that moves USDC between chains with Bridge Kit and Gateway.","frontiers":["global-money","intelligent-account"],"blocks":["app-kits","gateway","cctp"],"source_url":"https://docs.arc.io/build/sample-apps/arc-fintech","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"Arc stablecoin FX","docs_url":"https://docs.arc.io/build/sample-apps/arc-stablecoin-fx","repo":"https://github.com/circlefin/arc-stablecoin-fx","tags":["App Kit","Swap"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-10-02","summary":"USDC and EURC swaps with an app-level fee, built on App Kit Swap.","frontiers":["global-money"],"blocks":["app-kits","eurc","usdc"],"source_url":"https://docs.arc.io/build/sample-apps/arc-stablecoin-fx","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"Arc DeFi lend and borrow","docs_url":"https://docs.arc.io/build/sample-apps/arc-defi-lend-borrow","repo":"https://github.com/circlefin/arc-defi-lend-borrow","tags":["DeFi","Hardhat"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-09-18","summary":"Custom lending contract: post cirBTC as collateral and borrow USDC (Hardhat project).","frontiers":["onchain-credit"],"blocks":["usdc"],"source_url":"https://docs.arc.io/build/sample-apps/arc-defi-lend-borrow","retrieved_at":"2026-10-04T23:09:17.247Z"},
+    {"title":"Arc prediction markets","docs_url":"https://docs.arc.io/build/sample-apps/arc-prediction-markets","repo":"https://github.com/circlefin/arc-prediction-markets","tags":["Prediction Markets","UMA"],"license":"Apache-2.0","archived":false,"pushed_at":"2026-10-02","summary":"Outcome markets resolved by UMA's optimistic oracle, with an AMM for trading position tokens.","frontiers":[],"blocks":["usdc"],"source_url":"https://docs.arc.io/build/sample-apps/arc-prediction-markets","retrieved_at":"2026-10-04T23:09:17.247Z"}
+  ],
+  "starters": [
+    {
+      "id": "payouts",
+      "name": "Payouts from a CSV (stable-build starter)",
+      "skill": "stable-build:new-app",
+      "template": "skills/new-app/templates/payouts",
+      "summary": "Pay many recipients in USDC from a CSV, with a memo per row for reconciliation, a live ledger and export.",
+      "frontiers": [
+        "global-money"
+      ],
+      "opportunity": "borderless-payroll",
+      "blocks": [
+        "usdc",
+        "memo",
+        "multicall3from"
+      ],
+      "notes": "Sends each chunk as Multicall3From.aggregate3 over Memo.memo calls. The docs do not cover nesting the two; the starter backs it with its own testnet receipts (docs/batch-memo-evidence.md in the template). A per-row mode sends one Memo transaction per row. EOA wallets only.",
+      "closest_docs": [
+        "https://docs.arc.io/arc/tutorials/send-usdc-with-transaction-memo",
+        "https://docs.arc.io/arc/tutorials/batch-usdc-transfers"
+      ],
+      "source_url": "https://docs.arc.io/arc/tutorials/batch-usdc-transfers",
+      "retrieved_at": "2026-10-04T23:00:00Z"
+    }
+  ]
+}

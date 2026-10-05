@@ -1,0 +1,2 @@
+{"kind":"data","event":{"type":"app_context","appId":"app_7f3c2a91"}}
+arc-studio: This Arc Studio CLI version is no longer supported. Upgrade with npm install -g @circle-fin/arc-studio-cli@latest

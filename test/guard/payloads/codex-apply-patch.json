@@ -1,0 +1,15 @@
+{
+  "session_id": "019a0000-0000-7000-8000-000000000001",
+  "turn_id": "019a0000-0000-7000-8000-000000000002",
+  "transcript_path": null,
+  "cwd": "__ROOT__",
+  "hook_event_name": "PostToolUse",
+  "model": "gpt-5-codex",
+  "permission_mode": "default",
+  "tool_name": "apply_patch",
+  "tool_use_id": "call_test_apply_patch",
+  "tool_input": {
+    "command": "*** Begin Patch\n*** Update File: src/pay.ts\n@@ export async function tip(wallet: any, account: `0x${string}`, to: `0x${string}`, amount: string) {\n     account,\n     to,\n-    value: parseUnits(amount, 18),\n-    maxFeePerGas: parseGwei(\"20\"),\n+    value: parseUnits(amount, 6),\n+    maxFeePerGas: parseGwei(\"1\"),\n   });\n*** End Patch\n"
+  },
+  "tool_response": "Success. Updated the following files:\nM src/pay.ts\n"
+}

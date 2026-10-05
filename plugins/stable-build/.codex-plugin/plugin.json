@@ -1,0 +1,29 @@
+{
+  "name": "stable-build",
+  "version": "0.1.0",
+  "description": "Community builder kit for apps built on Arc: idea finder, payouts starter, Arc gotcha guard (opt-in), go-live checklist and role skills. Not affiliated with Circle.",
+  "author": {
+    "name": "stable-build contributors",
+    "url": "https://github.com/pedro-pelicioni/stable-build"
+  },
+  "homepage": "https://github.com/pedro-pelicioni/stable-build",
+  "repository": "https://github.com/pedro-pelicioni/stable-build",
+  "license": "MIT",
+  "keywords": ["arc", "usdc", "stablecoin", "payments", "web3"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "stable-build",
+    "shortDescription": "Build USDC apps on Arc, from idea to go-live",
+    "longDescription": "Community skills for apps built on Arc: find an idea from Arc's Request for Builders, scaffold a payouts starter, check edits against documented Arc gotchas (opt-in hook), and run a testnet-to-mainnet checklist. Not affiliated with Circle.",
+    "developerName": "stable-build contributors",
+    "category": "Coding",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://github.com/pedro-pelicioni/stable-build",
+    "defaultPrompt": [
+      "Help me find an idea to build on Arc",
+      "Scaffold the stable-build payouts starter",
+      "Am I ready to go live on Arc mainnet?"
+    ]
+  }
+}

@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stable-build: the builder journey for apps built on Arc</title>
+<script src="assets/boot.js"></script>
+<meta name="description" content="Skills, a payouts starter, an opt-in edit-time guard and a go-live checklist for apps built on Arc, for Claude Code and Codex. Community project, not affiliated with Circle.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F4F1EA" media="(prefers-color-scheme: light)">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="stable-build">
+<meta property="og:title" content="stable-build: the builder journey for apps built on Arc">
+<meta property="og:description" content="Skills, a payouts starter, an opt-in edit-time guard and a go-live checklist, for Claude Code and Codex. Community project, not affiliated with Circle.">
+<meta property="og:image" content="https://stable-build.vercel.app/og.png">
+<meta property="og:url" content="https://stable-build.vercel.app/">
+<link rel="canonical" href="https://stable-build.vercel.app/">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="stable-build wordmark with a keel glyph, the headline 'The builder journey for apps built on Arc', the line 'for Claude Code and Codex' and the one-line install command.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/main.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+<header class="site-header wrap" id="top">
+  <a class="brand" href="#top" aria-label="stable-build, back to top" data-i18n-attr="aria-label:brand.label">
+    <svg class="keel" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" focusable="false">
+      <path class="keel-hull" d="M2.5 8.2L31 6C29.6 10.8 26.4 14.4 21.2 14.4H5.4Z"/>
+      <path class="keel-fin" d="M13.4 14.2h5.2l-1.9 7.3h-4.4zM6.6 23.4C9 21.8 11.8 21 15 21h5c1.6 0 2.8 1.1 2.8 2.4s-1.2 2.4-2.8 2.4h-5c-3.2 0-6-.8-8.4-2.4zM5.8 14.2h3l-.5 4.6H6.3z"/>
+    </svg>
+    <span class="wordmark">stable-build</span>
+  </a>
+  <nav class="site-nav" aria-label="Sections" data-i18n-attr="aria-label:nav.label">
+    <ul role="list">
+      <li><a href="#installs" data-i18n="nav.installs">What it installs</a></li>
+      <li><a href="#guard" data-i18n="nav.guard">Guard</a></li>
+      <li><a href="#journey" data-i18n="nav.journey">Journey</a></li>
+      <li><a href="#install" data-i18n="nav.install">Install</a></li>
+    </ul>
+  </nav>
+  <div class="header-actions">
+    <a class="gh" href="https://github.com/pedro-pelicioni/stable-build">GitHub</a>
+    <div class="lang" role="group" aria-label="Language / Idioma" hidden>
+      <button type="button" data-lang="en" lang="en" title="English" aria-pressed="true">EN</button>
+      <button type="button" data-lang="pt" lang="pt-BR" title="Português (Brasil)" aria-pressed="false">PT</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero wrap" aria-labelledby="hero-title">
+  <h1 id="hero-title" data-i18n="hero.title">The builder journey for apps built on&nbsp;Arc</h1>
+  <p class="lede" data-i18n="hero.lede">Skills, a payouts starter, an opt-in edit-time guard and a go-live checklist for Claude&nbsp;Code and Codex. From “what should I build?” to a mainnet readiness report.</p>
+
+  <div class="cmd cmd--hero">
+    <p class="cmd-label" id="hero-cmd-label" data-i18n="hero.cmdLabel">Install with one command</p>
+    <div class="cmd-row">
+      <pre class="sh" lang="en"><code id="cmd-install"><span class="l">curl <span class="nb">-fsSL</span> https://<wbr>raw.githubusercontent.com/<wbr><span class="nb">pedro-pelicioni/</span><wbr><span class="nb">stable-build/</span><wbr>main/<wbr>install.sh | bash</span></code></pre>
+      <button class="copy copy--primary" type="button" data-copy="cmd-install" aria-describedby="hero-cmd-label" hidden>Copy</button>
+    </div>
+  </div>
+  <p class="hero-note" data-i18n="hero.note">It asks before adding Circle’s skills, the Arc Studio plugin and the guard; the docs MCP servers are added by default (<code>--no-mcp</code> skips them). Run it in a normal terminal, not inside an agent session. To read the script first, <a href="#read-first">preview the plan with <code>--dry-run</code></a>.</p>
+
+  <div class="hero-actions">
+    <a class="btn btn--ghost" href="https://github.com/pedro-pelicioni/stable-build">
+      <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span data-i18n="hero.github">View the source on GitHub</span>
+    </a>
+    <p class="status" data-i18n="hero.status">Version 0.1.0, not released yet. Tested with Claude Code 2.1.280; the Codex path has not been run.</p>
+  </div>
+  <p class="affil" data-i18n="hero.affil">Built on Arc · Community project, not affiliated with Circle</p>
+</section>
+
+<section class="section wrap" id="installs" aria-labelledby="installs-title">
+  <div class="section-head">
+    <h2 id="installs-title" data-i18n="installs.title">What one command installs</h2>
+    <p data-i18n="installs.intro">Plugins are added by the hosts’ own <code>claude plugin</code> and <code>codex plugin</code> commands, and the Arc Studio plugin by its own CLI. Circle’s skills and the Arc Studio plugin need your yes; the MCP plugin is added by default. Each optional piece has a flag to skip it.</p>
+  </div>
+  <ul class="installs" role="list">
+    <li class="inst">
+      <div class="inst-name">
+        <h3 data-i18n="installs.sb.name">stable-build skills and guard</h3>
+        <p class="owner" data-i18n="installs.sb.owner">stable-build, MIT</p>
+      </div>
+      <p class="inst-body" data-i18n="installs.sb.body">16 skills for the journey, from <code>guide</code> and <code>find-idea</code> to <code>go-live</code>, plus the guard hook, which stays off until you opt in.</p>
+      <p class="inst-meta"><code>stable-build@stable-build</code></p>
+    </li>
+    <li class="inst">
+      <div class="inst-name">
+        <h3 data-i18n="installs.circle.name">Circle’s skills</h3>
+        <p class="owner" data-i18n="installs.circle.owner">Belongs to Circle, Apache-2.0</p>
+      </div>
+      <p class="inst-body" data-i18n="installs.circle.body">Circle’s <code>circle-skills</code> plugin, fetched from circlefin/skills and not bundled. stable-build skills hand product questions to it. Installing it accepts Circle’s developer terms, so the installer asks first.</p>
+      <p class="inst-meta"><a href="https://github.com/circlefin/skills">circlefin/skills</a> <span class="inst-skip"><span data-i18n="installs.skip">Skip:</span> <code>--no-circle</code></span></p>
+    </li>
+    <li class="inst">
+      <div class="inst-name">
+        <h3 data-i18n="installs.studio.name">Arc Studio plugin</h3>
+        <p class="owner" data-i18n="installs.studio.owner">Belongs to Circle</p>
+      </div>
+      <p class="inst-body" data-i18n="installs.studio.body">Circle’s hosted agent that writes, audits and deploys contracts, to Arc testnet only. If the <code>arc-studio</code> CLI is installed and you agree, the installer registers its Claude Code plugin. You log in to Arc Studio yourself.</p>
+      <p class="inst-meta"><a href="https://docs.arc.io/ai/arc-studio-cli" data-i18n="installs.studio.docs">Arc Studio CLI docs</a> <span class="inst-skip"><span data-i18n="installs.skip">Skip:</span> <code>--no-studio</code></span></p>
+    </li>
+    <li class="inst">
+      <div class="inst-name">
+        <h3 data-i18n="installs.mcp.name">Arc docs MCP and Circle codegen MCP</h3>
+        <p class="owner" data-i18n="installs.mcp.owner">stable-build config (MIT) pointing at hosted servers run by Arc’s docs site and Circle</p>
+      </div>
+      <p class="inst-body" data-i18n="installs.mcp.body">The optional <code>stable-build-mcp</code> plugin adds the Arc docs server (<code class="u">https://docs.arc.io/mcp</code>) and, in Claude Code, Circle’s codegen docs server (<code class="u">https://api.circle.com/v1/codegen/mcp</code>). In Codex it adds only the Arc docs server, because Circle’s Codex plugin brings its own. It is added by default; in Claude Code the installer then checks both servers once with <code>claude mcp get</code>. Queries you send them go to docs.arc.io or to Circle.</p>
+      <p class="inst-meta"><a href="https://docs.arc.io/ai/mcp" data-i18n="installs.mcp.arc">Arc MCP docs</a> <a href="https://developers.circle.com/ai/mcp" data-i18n="installs.mcp.circle">Circle MCP docs</a> <span class="inst-skip"><span data-i18n="installs.skip">Skip:</span> <code>--no-mcp</code></span></p>
+    </li>
+  </ul>
+</section>
+
+<section class="section section--guard" id="guard" aria-labelledby="guard-title">
+  <div class="wrap">
+    <div class="guard-head">
+      <div class="guard-intro">
+        <h2 id="guard-title" data-i18n="guard.title">A guard that reads each edit for Arc gotchas</h2>
+        <p data-i18n="guard.intro">An advisory check that runs after each Write/Edit (Claude Code) or apply_patch (Codex) inside an Arc project and looks only at the lines just added.</p>
+      </div>
+      <div class="why">
+        <h3 data-i18n="guard.why.title">Why the filter below is wrong on Arc</h3>
+        <p data-i18n="guard.why.body">One ERC-20 USDC transfer logs twice: from <code>0x3600…</code> at 6 decimals and from the system emitter at 18. A plain native send logs only from the system emitter, so a <code>0x3600…</code> filter misses it.</p>
+        <p><a href="https://docs.arc.io/arc/references/usdc-system-events" data-i18n="guard.why.link">USDC system events on docs.arc.io</a></p>
+      </div>
+    </div>
+
+    <ol class="demo" role="list">
+      <li class="step">
+        <h3 class="step-title"><span class="step-n" aria-hidden="true">1</span> <span data-i18n="demo.s1">The agent writes a USDC history query</span></h3>
+        <figure class="editor">
+          <figcaption class="editor-bar"><span class="file" lang="en">src/history.ts</span> <span class="tool" lang="en">Write</span></figcaption>
+          <pre class="code" id="code-before" lang="en" tabindex="0" role="region" aria-label="src/history.ts, before the fix" data-i18n-attr="aria-label:demo.code1"><code><span class="ln"><span class="k">import</span> { createPublicClient, formatUnits, http, parseAbiItem } <span class="k">from</span> <span class="s">"viem"</span>;</span><span class="ln"><span class="k">import</span> { arcTestnet } <span class="k">from</span> <span class="s">"viem/chains"</span>;</span><span class="ln"> </span><span class="ln"><span class="k">const</span> client = createPublicClient({ chain: arcTestnet, transport: http() });</span><span class="ln is-bad"><span class="k">const</span> USDC = <mark class="tok tok--bad"><span class="s">"0x3600000000000000000000000000000000000000"</span></mark>;</span><span class="ln"><span class="k">const</span> transfer = parseAbiItem(<span class="s">"event Transfer(address indexed from, address indexed to, uint256 value)"</span>);</span><span class="ln"> </span><span class="ln"><span class="k">export async function</span> received(to: <span class="s">`0x${string}`</span>, fromBlock: bigint, toBlock: bigint) {</span><span class="ln is-flag">  <span class="k">const</span> logs = <span class="k">await</span> client.getLogs({</span><span class="ln is-bad">    address: <mark class="tok tok--bad">USDC</mark>,</span><span class="ln">    event: transfer,</span><span class="ln">    args: { to },</span><span class="ln">    fromBlock,</span><span class="ln">    toBlock,</span><span class="ln">  });</span><span class="ln">  <span class="k">return</span> logs.map((log) =&gt; formatUnits(log.args.value!, <span class="s">6</span>));</span><span class="ln">}</span></code></pre>
+        </figure>
+      </li>
+
+      <li class="step">
+        <h3 class="step-title"><span class="step-n" aria-hidden="true">2</span> <span data-i18n="demo.s2">The guard answers right after the edit</span></h3>
+        <div class="notice">
+          <svg class="notice-mark" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M8 1.5 15 14H1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6v4M8 11.6v.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <p class="notice-text" data-i18n="demo.notice">stable-build guard: 1 Arc gotcha in src/history.ts (transfer-filter-no-emitter) — advisory, edit kept</p>
+        </div>
+        <p class="step-note" data-i18n="demo.s2note">That one line is for you. The agent gets the details as added context.</p>
+        <details class="ctx">
+          <summary data-i18n="demo.ctx">What the agent receives (in English)</summary>
+          <pre class="context" id="guard-context" lang="en"><code>stable-build guard: 1 Arc gotcha in the lines just written (0 error, 1 warn).
+- <span class="w">[warn]</span> <b>transfer-filter-no-emitter</b> at src/history.ts:9: Filter on the ERC-20 USDC address (0x3600…) only: plain native USDC sends are missed. The system emitter logs every USDC movement, ERC-20 transfers included. <b>Fix:</b> Replace 0x3600… with the system emitter 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE (18 decimals). Do not query both: each ERC-20 transfer would come back twice. <b>Docs:</b> https://docs.arc.io/arc/references/usdc-system-events says "The native system emitter logs a `Transfer` for every explicit USDC transfer—native sends, ERC-20 transfers, mints, and burns—at 18-decimal precision." (checked 2026-10-05)
+advisory: the edit was applied; silence with `stable-build-ignore &lt;id&gt;`</code></pre>
+        </details>
+      </li>
+
+      <li class="step">
+        <h3 class="step-title"><span class="step-n step-n--ok" aria-hidden="true">3</span> <span data-i18n="demo.s3">The agent applies the fix</span></h3>
+        <figure class="editor editor--fixed">
+          <figcaption class="editor-bar"><span class="file" lang="en">src/history.ts</span> <span class="tool tool--ok" data-i18n="demo.fixed">Fixed</span></figcaption>
+          <pre class="code code--diff" id="code-diff" lang="en" tabindex="0" role="region" aria-label="src/history.ts, the changed lines after the fix" data-i18n-attr="aria-label:demo.code2"><code><span class="ln is-del" data-ln="5"><span class="sign">-</span><span class="k">const</span> USDC = <mark class="tok tok--bad"><span class="s">"0x3600000000000000000000000000000000000000"</span></mark>;</span><span class="ln is-add" data-ln="5"><span class="sign">+</span><span class="k">const</span> <mark class="tok tok--good">USDC_EMITTER</mark> = <mark class="tok tok--good"><span class="s">"0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"</span></mark>; <span class="c">// system emitter, 18 decimals</span></span><span class="ln is-gap" data-ln="…"> </span><span class="ln is-del" data-ln="10"><span class="sign">-</span>    address: <mark class="tok tok--bad">USDC</mark>,</span><span class="ln is-add" data-ln="10"><span class="sign">+</span>    address: <mark class="tok tok--good">USDC_EMITTER</mark>,</span><span class="ln is-gap" data-ln="…"> </span><span class="ln is-del" data-ln="16"><span class="sign">-</span>  <span class="k">return</span> logs.map((log) =&gt; formatUnits(log.args.value!, <mark class="tok tok--bad"><span class="s">6</span></mark>));</span><span class="ln is-add" data-ln="16"><span class="sign">+</span>  <span class="k">return</span> logs.map((log) =&gt; formatUnits(log.args.value!, <mark class="tok tok--good"><span class="s">18</span></mark>));</span></code></pre>
+        </figure>
+        <p class="step-note" data-i18n="demo.s3note">Only the changed lines are shown, numbered as in step 1. The guard checks the new lines again and prints nothing.</p>
+      </li>
+    </ol>
+
+    <dl class="props">
+      <div>
+        <dt data-i18n="guard.p1.t">Off until you opt in.</dt>
+        <dd data-i18n="guard.p1.d">The hook launcher exits without starting Node unless <code>~/.stable-build/config.json</code> contains <code>"guard": true</code>. Codex also requires you to trust the hooks in <code>/hooks</code>.</dd>
+      </div>
+      <div>
+        <dt data-i18n="guard.p2.t">Advisory.</dt>
+        <dd data-i18n="guard.p2.d">The edit is already applied. The guard never blocks, undoes or rewrites it, and it always exits 0. At most 5 findings per edit.</dd>
+      </div>
+      <div>
+        <dt data-i18n="guard.p3.t">Local.</dt>
+        <dd data-i18n="guard.p3.d">No network calls, no file writes, no telemetry. If anything fails, it exits 0 quietly.</dd>
+      </div>
+      <div>
+        <dt data-i18n="guard.p4.t">Arc projects only.</dt>
+        <dd data-i18n="guard.p4.d">A project counts when it has <code>.stable-build/project.json</code>, or a marker such as chain id 5042 or 5042002, <code>arc</code>/<code>arcTestnet</code> from <code>viem/chains</code>, an <code>rpc.*.arc.io</code> URL or the USDC address <code>0x3600…0000</code>.</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="wrap rules">
+    <div class="rules-head">
+      <h3 data-i18n="rules.title">10 rules, each tied to a docs page</h3>
+      <p data-i18n="rules.intro">Each rule’s docs quote and <code>verified_at</code> date are in <a href="https://github.com/pedro-pelicioni/stable-build/blob/main/plugins/stable-build/data/gotchas.json">data/gotchas.json</a>. Scan a repo without the hook: <code class="u">node &lt;plugin&gt;/scripts/guard.mjs --scan .</code></p>
+    </div>
+    <ul class="rule-list" role="list">
+      <li><a class="rule-id" lang="en" href="https://docs.arc.io/integrate/wallets"><code>usdc-native-value-6dp</code></a> <span class="sev sev--error" lang="en">error</span><p data-i18n="rules.r1">Native value or <code>msg.value</code> built with 6 decimals; native USDC uses 18.</p></li>
+      <li><a class="rule-id" lang="en" href="https://docs.arc.io/arc/references/contract-addresses"><code>usdc-erc20-amount-18dp</code></a> <span class="sev sev--error" lang="en">error</span><p data-i18n="rules.r2">USDC <code>transfer</code> / <code>approve</code> / <code>transferFrom</code> with 18-decimal amounts; the ERC-20 interface uses 6.</p></li>
+      <li><a class="rule-id" lang="en" href="https://docs.arc.io/integrate/wallets"><code>usdc-balance-summed</code></a> <span class="sev sev--error" lang="en">error</span><p data-i18n="rules.r3"><code>getBalance</code> added to <code>balanceOf</code>: one balance, two views.</p></li>
+      <li><a class="rule-id" lang="en" href="https://docs.arc.io/arc/references/evm-differences"><code>fee-below-floor</code></a> <span class="sev sev--error" lang="en">error</span><p data-i18n="rules.r4"><code>maxFeePerGas</code> or <code>gasPrice</code> under 20 gwei; such transactions never get a receipt.</p></li>
+      <li><a class="rule-id" lang="en" href="https://docs.arc.io/arc/references/rpc-endpoints"><code>getlogs-unpaged</code></a> <span class="sev sev--error" lang="en">error</span><p data-i18n="rules.r5">Log queries from a fixed block to latest without paging, or ranges over 10,000 blocks.</p></li>
+      <li><a class="rule-id" lang="en" href="https://docs.arc.io/arc/references/usdc-system-events"><code>transfer-filter-no-emitter</code></a> <span class="sev sev--error" lang="en">error</span> <span class="sev sev--warn" lang="en">warn</span><p data-i18n="rules.r6"><code>Transfer</code> filters that count ERC-20 transfers twice, or watch only <code>0x3600…</code> and miss native sends.</p></li>
+      <li><a class="rule-id" lang="en" href="https://developers.circle.com/cctp/references/stellar"><code>cctp-stellar-no-forwarder</code></a> <span class="sev sev--error" lang="en">error</span><p data-i18n="rules.r7">CCTP burn to Stellar (domain 27) whose mintRecipient or destinationCaller is not CctpForwarder.</p></li>
+      <li><a class="rule-id" lang="en" href="https://docs.arc.io/arc/references/evm-differences"><code>upstream-foundry</code></a> <span class="sev sev--warn" data-i18n="rules.ci">warn (error in CI)</span><p data-i18n="rules.r8">Upstream Foundry, or <code>arc-forge test</code> / <code>arc-anvil</code> without Arc mode, which run Ethereum rules.</p></li>
+      <li><a class="rule-id" lang="en" href="https://docs.arc.io/arc/concepts/transaction-memos"><code>extension-from-smart-account</code></a> <span class="sev sev--error" lang="en">error</span><p data-i18n="rules.r9">Memo or Multicall3From used from a smart account, Safe, bundler or another contract; they accept only a direct EOA caller.</p></li>
+      <li><a class="rule-id" lang="en" href="https://docs.arc.io/arc/concepts/batched-transactions"><code>multicall3from-value</code></a> <span class="sev sev--error" lang="en">error</span><p data-i18n="rules.r10"><code>aggregate3Value</code>, or value on <code>aggregate3</code> through Multicall3From, which forwards no value.</p></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section wrap" id="journey" aria-labelledby="journey-title">
+  <div class="section-head">
+    <h2 id="journey-title" data-i18n="journey.title">From idea to go-live</h2>
+    <p data-i18n="journey.intro">Start with <code>/stable-build:guide</code>: a read-only check of your setup that asks your stage and names the next skill. In Claude Code, run a skill as <code>/stable-build:&lt;name&gt;</code>; in Codex, ask for it by name.</p>
+  </div>
+  <ol class="route" role="list">
+    <li class="stop">
+      <span class="stop-n" aria-hidden="true">1</span>
+      <h3><code>find-idea</code></h3>
+      <p data-i18n="journey.s1">A short interview, then 5 ranked ideas grounded in Arc’s <a href="https://www.arc.io/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money">Request for Builders</a>, live building blocks, sample apps and current programs, each with sources, deadlines and a first-2-hours plan.</p>
+    </li>
+    <li class="stop">
+      <span class="stop-n" aria-hidden="true">2</span>
+      <h3><code>new-app</code> <span class="stop-sub" data-i18n="journey.s2sub">payouts starter</span></h3>
+      <p data-i18n="journey.s2">Scaffolds into an empty folder you name. Testnet by default.</p>
+      <ol class="pipe" role="list" aria-label="How the payouts starter pays a CSV" data-i18n-attr="aria-label:journey.pipe.label">
+        <li data-i18n="journey.pipe1">CSV of recipients</li>
+        <li data-i18n="journey.pipe2">One <code>Memo.memo(USDC.transfer)</code> per row</li>
+        <li data-i18n="journey.pipe3">Batched through <code>Multicall3From</code> from an EOA</li>
+        <li data-i18n="journey.pipe4">Reconciled from receipts into an 18-decimal ledger</li>
+      </ol>
+      <p class="stop-more" data-i18n="journey.s2more">Rerunning resumes the batch and skips paid rows.</p>
+    </li>
+    <li class="stop">
+      <span class="stop-n" aria-hidden="true">3</span>
+      <h3 data-i18n="journey.s3title">Role skills</h3>
+      <dl class="roles">
+        <div><dt><code>analyst</code></dt><dd data-i18n="journey.r.analyst">brainstorming and quick research</dd></div>
+        <div><dt><code>pm</code></dt><dd data-i18n="journey.r.pm">PRD with an Onchain section</dd></div>
+        <div><dt><code>ux-designer</code></dt><dd data-i18n="journey.r.ux">UX specs with Arc states</dd></div>
+        <div><dt><code>architect</code></dt><dd data-i18n="journey.r.architect">starts from Arc’s protocol invariants</dd></div>
+        <div><dt><code>dev</code></dt><dd data-i18n="journey.r.dev">one story at a time, test first</dd></div>
+        <div><dt><code>tech-writer</code></dt><dd data-i18n="journey.r.tw">a docs.arc.io source for every Arc fact</dd></div>
+      </dl>
+      <p class="stop-more" data-i18n="journey.s3more">A story is done only with passing tests and a recorded testnet transaction hash. The role skills are adapted from <a href="https://github.com/bmad-code-org/BMAD-METHOD">BMad Method</a> v6.12.1 (tech-writer from v6.10.0), MIT.</p>
+    </li>
+    <li class="stop">
+      <span class="stop-n" aria-hidden="true">4</span>
+      <h3><code>go-live</code></h3>
+      <p data-i18n="journey.s4">Testnet-to-mainnet checklist: 14 gates, each marked with evidence, written to <code>docs/go-live-report.md</code>. Never deploys and never touches keys.</p>
+    </li>
+  </ol>
+  <ol class="flow" role="list" aria-label="Order of the skills" data-i18n-attr="aria-label:journey.flow">
+    <li><code>find-idea</code></li>
+    <li><code>new-app</code></li>
+    <li><code>product-brief</code> / <code>pm</code> / <code>ux-designer</code> / <code>architect</code> / <code>stories</code></li>
+    <li><code>dev</code></li>
+    <li><code>gotchas</code> / <code>layered-review</code></li>
+    <li><code>go-live</code></li>
+  </ol>
+</section>
+
+<section class="section wrap" id="install" aria-labelledby="install-title">
+  <div class="section-head">
+    <h2 id="install-title" data-i18n="install.title">Install three ways</h2>
+    <p data-i18n="install.req">Requirements: Node.js 20 or newer, plus Claude Code 2.1.280 or newer and/or a Codex CLI that has <code>codex plugin</code>. The installer needs bash 3.2 or newer (the macOS default works).</p>
+  </div>
+
+  <div class="ways">
+    <article class="way" aria-labelledby="way1-title">
+      <div class="way-head">
+        <h3 id="way1-title" data-i18n="install.w1.title">Installer, for Claude Code and Codex</h3>
+        <p data-i18n="install.w1.body">Asks before adding Circle’s skills, the Arc Studio plugin and the guard. Rerunning it is safe: it changes nothing that is already in place.</p>
+      </div>
+      <div class="way-cmds">
+        <p class="sr-only" id="w1-label" data-i18n="install.w1.label">Installer one-liner</p>
+        <div class="cmd">
+          <div class="cmd-row">
+            <pre class="sh" lang="en"><code id="cmd-w1"><span class="l">curl <span class="nb">-fsSL</span> https://<wbr>raw.githubusercontent.com/<wbr><span class="nb">pedro-pelicioni/</span><wbr><span class="nb">stable-build/</span><wbr>main/<wbr>install.sh | bash</span></code></pre>
+            <button class="copy" type="button" data-copy="cmd-w1" aria-describedby="w1-label" hidden>Copy</button>
+          </div>
+        </div>
+        <p class="cmd-label" id="read-first" data-i18n="install.w1.read">To read it first, download it, then preview the plan:</p>
+        <div class="cmd">
+          <div class="cmd-row">
+            <pre class="sh" lang="en"><code id="cmd-w1b"><span class="l">curl <span class="nb">-fsSLO</span> https://<wbr>raw.githubusercontent.com/<wbr><span class="nb">pedro-pelicioni/</span><wbr><span class="nb">stable-build/</span><wbr>main/<wbr>install.sh</span><span class="l">bash install.sh <span class="nb">--dry-run</span></span></code></pre>
+            <button class="copy" type="button" data-copy="cmd-w1b" aria-describedby="read-first" hidden>Copy</button>
+          </div>
+        </div>
+        <p class="cmd-label" id="run-it" data-i18n="install.w1.run">When you are happy with the plan, run it:</p>
+        <div class="cmd">
+          <div class="cmd-row">
+            <pre class="sh" lang="en"><code id="cmd-w1c"><span class="l">bash install.sh</span></code></pre>
+            <button class="copy" type="button" data-copy="cmd-w1c" aria-describedby="run-it" hidden>Copy</button>
+          </div>
+        </div>
+        <details class="opts">
+          <summary data-i18n="install.opts.summary">All installer options</summary>
+          <table>
+            <caption class="sr-only" data-i18n="install.opts.caption">Installer options and their effect</caption>
+            <thead><tr><th scope="col" data-i18n="install.opts.h1">Option</th><th scope="col" data-i18n="install.opts.h2">Effect</th></tr></thead>
+            <tbody>
+              <tr><td><code>--dry-run</code></td><td data-i18n="opt.dry">Print every planned action and change nothing</td></tr>
+              <tr><td><code>--yes</code></td><td data-i18n="opt.yes">Accept every prompt, including turning the guard on (a guard you declined earlier stays off)</td></tr>
+              <tr><td><code>--no-hooks</code></td><td data-i18n="opt.nohooks">Leave the guard off and do not ask, now or on later runs</td></tr>
+              <tr><td><code>--no-mcp</code></td><td data-i18n="opt.nomcp">Skip the <code>stable-build-mcp</code> plugin</td></tr>
+              <tr><td><code>--no-circle</code></td><td data-i18n="opt.nocircle">Skip Circle’s skills plugin</td></tr>
+              <tr><td><code>--no-studio</code></td><td data-i18n="opt.nostudio">Skip the Arc Studio plugin</td></tr>
+              <tr><td><code>--update</code></td><td data-i18n="opt.update">Update stable-build, plus Circle’s and Arc Studio’s plugins if this installer added them. Never turns the guard on</td></tr>
+              <tr><td><code>--uninstall</code></td><td data-i18n="opt.uninstall">Remove only what this installer added</td></tr>
+              <tr><td><code>--ref=TAG</code></td><td data-i18n="opt.ref">Install a tag or branch (default <code>main</code>, which moves only at releases)</td></tr>
+              <tr><td><code>--prefix=DIR</code></td><td data-i18n="opt.prefix">Sandbox: every CLI call runs with <code>HOME=DIR</code>, so nothing outside <code>DIR</code> is written</td></tr>
+              <tr><td><code>--lang=LANG</code></td><td data-i18n="opt.lang">Language of the installer and of the kit’s replies, <code>en</code> or <code>pt-BR</code>; saved for later runs</td></tr>
+            </tbody>
+          </table>
+          <p data-i18n="install.opts.notty">With no terminal attached (or inside a Claude Code or Codex session) and no <code>--yes</code>, the installer adds only stable-build itself: Circle’s plugin and the Arc Studio registration are skipped, the guard stays off, and it tells you how to add them later.</p>
+        </details>
+      </div>
+    </article>
+
+    <article class="way" aria-labelledby="way2-title">
+      <div class="way-head">
+        <h3 id="way2-title" data-i18n="install.w2.title">Claude Code, with <code>/plugin</code></h3>
+        <p data-i18n="install.w2.body"><code>stable-build-mcp</code> is optional. To turn the guard on, run <code>/stable-build:gotchas enable</code>; the skill explains the guard and asks before it writes anything. Start with <code>/stable-build:guide</code>.</p>
+      </div>
+      <div class="way-cmds">
+        <p class="cmd-label" id="w2-label" data-i18n="install.w2.label">Run these in Claude Code, one line at a time:</p>
+        <ol class="cmd-lines" role="list" aria-labelledby="w2-label">
+          <li class="cmd-row"><pre class="sh sh--cc" lang="en"><code id="cmd-w2-1"><span class="l">/plugin marketplace add circlefin/<wbr>skills</span></code></pre><button class="copy copy--sm" type="button" data-copy="cmd-w2-1" aria-describedby="cmd-w2-1" hidden>Copy</button></li>
+          <li class="cmd-row"><pre class="sh sh--cc" lang="en"><code id="cmd-w2-2"><span class="l">/plugin install <span class="nb">circle-skills@</span><wbr>circle</span></code></pre><button class="copy copy--sm" type="button" data-copy="cmd-w2-2" aria-describedby="cmd-w2-2" hidden>Copy</button></li>
+          <li class="cmd-row"><pre class="sh sh--cc" lang="en"><code id="cmd-w2-3"><span class="l">/plugin marketplace add <span class="nb">pedro-pelicioni/</span><wbr><span class="nb">stable-build</span></span></code></pre><button class="copy copy--sm" type="button" data-copy="cmd-w2-3" aria-describedby="cmd-w2-3" hidden>Copy</button></li>
+          <li class="cmd-row"><pre class="sh sh--cc" lang="en"><code id="cmd-w2-4"><span class="l">/plugin install <span class="nb">stable-build@</span><wbr><span class="nb">stable-build</span></span></code></pre><button class="copy copy--sm" type="button" data-copy="cmd-w2-4" aria-describedby="cmd-w2-4" hidden>Copy</button></li>
+          <li class="cmd-row"><pre class="sh sh--cc" lang="en"><code id="cmd-w2-5"><span class="l">/plugin install <span class="nb">stable-build-mcp@</span><wbr><span class="nb">stable-build</span></span></code></pre><button class="copy copy--sm" type="button" data-copy="cmd-w2-5" aria-describedby="cmd-w2-5" hidden>Copy</button></li>
+          <li class="cmd-row"><pre class="sh sh--cc" lang="en"><code id="cmd-w2-6"><span class="l">/<span class="nb">reload-plugins</span></span></code></pre><button class="copy copy--sm" type="button" data-copy="cmd-w2-6" aria-describedby="cmd-w2-6" hidden>Copy</button></li>
+        </ol>
+      </div>
+    </article>
+
+    <article class="way" aria-labelledby="way3-title">
+      <div class="way-head">
+        <h3 id="way3-title"><span data-i18n="install.w3.title">Codex, with <code>codex plugin</code></span> <span class="badge" data-i18n="install.w3.badge">UNVERIFIED: not run yet</span></h3>
+        <p data-i18n="install.w3.body"><code>stable-build-mcp</code> is optional; in Codex it adds only the Arc docs server, because Circle’s Codex plugin brings its own. If you turn the guard on, also open <code>/hooks</code> in Codex and trust the stable-build hooks: Codex skips plugin hooks until you do.</p>
+      </div>
+      <div class="way-cmds">
+        <p class="sr-only" id="w3-label" data-i18n="install.w3.label">Codex commands</p>
+        <div class="cmd">
+          <div class="cmd-row">
+            <pre class="sh" lang="en"><code id="cmd-w3"><span class="l">codex plugin marketplace add circlefin/<wbr>skills <span class="nb">--ref</span> master</span><span class="l">codex plugin add circle@<wbr><span class="nb">circle-skills</span></span><span class="l">codex plugin marketplace add <span class="nb">pedro-pelicioni/</span><wbr><span class="nb">stable-build</span> <span class="nb">--ref</span> main</span><span class="l">codex plugin add <span class="nb">stable-build@</span><wbr><span class="nb">stable-build</span></span><span class="l">codex plugin add <span class="nb">stable-build-mcp@</span><wbr><span class="nb">stable-build</span></span></code></pre>
+            <button class="copy" type="button" data-copy="cmd-w3" aria-describedby="w3-label" hidden>Copy</button>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <div class="touch">
+    <div class="touch-list">
+      <h3 data-i18n="touch.title">What it touches</h3>
+      <ul role="list">
+        <li data-i18n="touch.l1">The installer itself writes only under <code>~/.stable-build</code>: <code>manifest.json</code>, with what it added, and <code>config.json</code>, with your language and, once you agree, the guard switch (<code>"guard": true</code>).</li>
+        <li data-i18n="touch.l2">Everything in Claude Code’s and Codex’s folders is written by their own <code>claude plugin</code> and <code>codex plugin</code> commands. The installer never edits <code>settings.json</code>, <code>.claude.json</code>, <code>config.toml</code> or <code>hooks.json</code> by hand.</li>
+        <li data-i18n="touch.l5">Network use at install: the plugin CLIs clone <code>pedro-pelicioni/stable-build</code> and <code>circlefin/skills</code> from GitHub, and in Claude Code the installer checks the two MCP servers once with <code>claude mcp get</code>.</li>
+        <li data-i18n="touch.l3">Never touched: shell profiles, <code>PATH</code>, global npm packages, permission allow-rules, other plugins or skills you already have, any login or token, and your projects.</li>
+        <li data-i18n="touch.l4">No telemetry, analytics or install counters, in the installer, the hooks or the skills.</li>
+      </ul>
+      <p data-i18n="touch.more"><a href="https://github.com/pedro-pelicioni/stable-build#what-gets-touched">The complete list, file by file, is in the README</a></p>
+    </div>
+    <div class="touch-uninstall">
+      <h3 id="uninstall-title" data-i18n="uninstall.title">Uninstall</h3>
+      <div class="cmd">
+        <div class="cmd-row">
+          <pre class="sh" lang="en"><code id="cmd-uninstall"><span class="l">curl <span class="nb">-fsSL</span> https://<wbr>raw.githubusercontent.com/<wbr><span class="nb">pedro-pelicioni/</span><wbr><span class="nb">stable-build/</span><wbr>main/<wbr>install.sh | bash <span class="nb">-s</span> <span class="nb">--</span> <span class="nb">--uninstall</span></span></code></pre>
+          <button class="copy" type="button" data-copy="cmd-uninstall" aria-describedby="uninstall-title" hidden>Copy</button>
+        </div>
+      </div>
+      <p data-i18n="uninstall.body">It removes, in reverse order, only what its manifest says it added, and asks before removing Circle’s plugin. It never runs <code>arc-studio logout</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="language" aria-labelledby="language-title">
+  <div class="lang-grid">
+    <div class="section-head">
+      <h2 id="language-title" data-i18n="language.title">English and Português</h2>
+      <p data-i18n="language.body">The installer, the guard’s one-line warning, the session-start notice and what the skills write for you (chat replies, <code>docs/go-live-report.md</code>, PRDs, stories, idea lists) come in English or Brazilian Portuguese (<code>pt-BR</code>). The installer’s first question is “Language / Idioma”. To answer it up front:</p>
+      <p class="cmd-label" id="lang-dl" data-i18n="language.dl">If you downloaded <code>install.sh</code>:</p>
+      <div class="cmd">
+        <div class="cmd-row">
+          <pre class="sh" lang="en"><code id="cmd-lang"><span class="l">bash install.sh <span class="nb">--lang=pt-BR</span></span></code></pre>
+          <button class="copy" type="button" data-copy="cmd-lang" aria-describedby="lang-dl" hidden>Copy</button>
+        </div>
+      </div>
+      <p class="cmd-label" id="lang-ol" data-i18n="language.ol">Or with the one-liner:</p>
+      <div class="cmd">
+        <div class="cmd-row">
+          <pre class="sh" lang="en"><code id="cmd-lang2"><span class="l">curl <span class="nb">-fsSL</span> https://<wbr>raw.githubusercontent.com/<wbr><span class="nb">pedro-pelicioni/</span><wbr><span class="nb">stable-build/</span><wbr>main/<wbr>install.sh | <span class="nb">STABLE_BUILD_LANG=pt-BR</span> bash</span></code></pre>
+          <button class="copy" type="button" data-copy="cmd-lang2" aria-describedby="lang-ol" hidden>Copy</button>
+        </div>
+      </div>
+      <p class="fine" data-i18n="language.fine">The choice is saved as <code>"language"</code> in <code>~/.stable-build/config.json</code>; saving it does not turn the guard on. Code, file names, rule ids, CLI flags and commit messages stay in English.</p>
+    </div>
+    <div class="notices" role="group" aria-label="The guard’s one-line warning in each language" data-i18n-attr="aria-label:language.notices">
+      <div class="notice notice--quiet" lang="en">
+        <span class="notice-lang">en</span>
+        <p class="notice-text">stable-build guard: 1 Arc gotcha in src/history.ts (transfer-filter-no-emitter) — advisory, edit kept</p>
+      </div>
+      <div class="notice notice--quiet" lang="pt-BR">
+        <span class="notice-lang">pt-BR</span>
+        <p class="notice-text">stable-build guard: 1 pegadinha da Arc em src/history.ts (transfer-filter-no-emitter) — aviso, edição mantida</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="#top" aria-label="stable-build, back to top" data-i18n-attr="aria-label:brand.label">
+        <svg class="keel" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true" focusable="false">
+          <path class="keel-hull" d="M2.5 8.2L31 6C29.6 10.8 26.4 14.4 21.2 14.4H5.4Z"/>
+          <path class="keel-fin" d="M13.4 14.2h5.2l-1.9 7.3h-4.4zM6.6 23.4C9 21.8 11.8 21 15 21h5c1.6 0 2.8 1.1 2.8 2.4s-1.2 2.4-2.8 2.4h-5c-3.2 0-6-.8-8.4-2.4z"/>
+        </svg>
+        <span class="wordmark">stable-build</span>
+      </a>
+      <p class="affil" data-i18n="footer.affil">Community project, not affiliated with Circle. No Circle or Arc endorsement is implied.</p>
+    </div>
+    <div class="footer-credits">
+      <h2 class="footer-h" data-i18n="footer.credits">Credits</h2>
+      <p data-i18n="footer.c1">Circle’s skills (<a href="https://github.com/circlefin/skills">circlefin/skills</a>, Apache-2.0) are fetched from Circle’s repo at install; <a href="https://www.npmjs.com/package/@circle-fin/arc-studio-cli">Arc Studio</a> (<code>@circle-fin/arc-studio-cli</code>) is installed by you from npm. Both belong to Circle and neither is redistributed. <code>studio-delegate</code> adapts some wording from the Arc Studio CLI 1.1.3 (MIT).</p>
+      <p data-i18n="footer.c2">The role skills and shared workflows are adapted from <a href="https://github.com/bmad-code-org/BMAD-METHOD">BMad Method</a> v6.12.1 (tech-writer from v6.10.0), MIT.</p>
+    </div>
+    <nav class="footer-links" aria-label="Project" data-i18n-attr="aria-label:footer.nav">
+      <h2 class="footer-h" data-i18n="footer.project">Project</h2>
+      <ul role="list">
+        <li><a href="https://github.com/pedro-pelicioni/stable-build">GitHub</a></li>
+        <li><a href="https://github.com/pedro-pelicioni/stable-build/blob/main/LICENSE" data-i18n="footer.license">MIT license</a></li>
+        <li><a href="https://github.com/pedro-pelicioni/stable-build/blob/main/THIRD_PARTY_NOTICES.md" data-i18n="footer.notices">Third-party notices</a></li>
+        <li><a href="https://github.com/pedro-pelicioni/stable-build/blob/main/SECURITY.md" data-i18n="footer.security">Security reports</a></li>
+        <li data-i18n="footer.readme"><a href="https://github.com/pedro-pelicioni/stable-build/blob/main/README.md">README</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+<p class="sr-only" aria-live="polite" id="live"></p>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "arc-docs": {
+      "type": "http",
+      "url": "https://docs.arc.io/mcp"
+    },
+    "circle-codegen": {
+      "type": "http",
+      "url": "https://api.circle.com/v1/codegen/mcp"
+    }
+  }
+}

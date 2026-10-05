@@ -1,0 +1,7 @@
+{
+  "cleanupPeriodDays": 45,
+  "spinnerTipsEnabled": false,
+  "permissions": {
+    "deny": ["Read(./.env)"]
+  }
+}

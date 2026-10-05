@@ -1,0 +1,34 @@
+{
+  "status": "completed",
+  "appId": "app_7f3c2a91",
+  "threadId": "thr_51d0e8c4",
+  "sandboxId": "sbx_0a9b8c7d",
+  "finalText": "Deployed Demo (ERC-20, owner-only mint) to Arc Testnet. Tests pass.",
+  "todos": [
+    { "id": "t1", "text": "Write Demo.sol", "status": "done" },
+    { "id": "t2", "text": "Deploy to Arc Testnet", "status": "done" }
+  ],
+  "filesChanged": ["contracts/Demo.sol", "test/Demo.t.sol"],
+  "fileDiffs": [
+    { "path": "contracts/Demo.sol", "action": "write", "addedLines": 24, "removedLines": 0, "isFragment": false, "truncated": false, "hunk": "+// SPDX-License-Identifier: MIT\n+contract Demo {" },
+    { "path": "test/Demo.t.sol", "action": "write", "addedLines": 31, "removedLines": 0, "isFragment": false, "truncated": true, "hunk": "+contract DemoTest {" }
+  ],
+  "contextFiles": [],
+  "workspaceFiles": [],
+  "deployments": [
+    {
+      "contract": "Demo",
+      "address": "0x1111111111111111111111111111111111111111",
+      "network": "Arc Testnet",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/${ADDR_A}",
+      "txHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "deployedAt": "2026-10-04T18:00:00.000Z"
+    }
+  ],
+  "artifacts": { "contractSources": [], "abis": [], "metadata": [] },
+  "webUrl": "https://studio.arc.io/app/${APP}",
+  "questions": null,
+  "errorMessage": null,
+  "traceId": "trace_42",
+  "budget": null
+}

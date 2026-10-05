@@ -1,0 +1,34 @@
+{
+  "name": "{{APP_NAME}}",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CSV payouts with per-row memos for apps built on Arc (stable-build payouts starter)",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "payout": "tsx scripts/payout.ts",
+    "e2e:testnet": "tsx scripts/e2e-testnet.ts"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "viem": "2.57.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vite": "8.3.2",
+    "vitest": "5.0.3"
+  }
+}

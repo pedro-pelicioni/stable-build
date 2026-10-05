@@ -1,0 +1,30 @@
+{
+  "description": "stable-build: advisory Arc gotcha guard and session notice. Dormant until consent in $STABLE_BUILD_HOME/config.json; never blocks or undoes an edit. Fails open (exit 0) when the plugin files are missing.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c '[ -f \"$0\" ] || exit 0; exec sh \"$0\" \"$1\"' \"${CLAUDE_PLUGIN_ROOT}/scripts/run.sh\" session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c '[ -f \"$0\" ] || exit 0; exec sh \"$0\" \"$1\"' \"${CLAUDE_PLUGIN_ROOT}/scripts/run.sh\" guard",
+            "timeout": 15,
+            "statusMessage": "Checking Arc gotchas"
+          }
+        ]
+      }
+    ]
+  }
+}

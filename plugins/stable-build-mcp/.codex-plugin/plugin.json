@@ -1,0 +1,26 @@
+{
+  "name": "stable-build-mcp",
+  "version": "0.1.0",
+  "description": "Optional MCP server for apps built on Arc: Arc docs search (docs.arc.io/mcp). Remote HTTP, anonymous, read-only. Not affiliated with Circle.",
+  "author": {
+    "name": "stable-build contributors",
+    "url": "https://github.com/pedro-pelicioni/stable-build"
+  },
+  "homepage": "https://github.com/pedro-pelicioni/stable-build",
+  "repository": "https://github.com/pedro-pelicioni/stable-build",
+  "license": "MIT",
+  "keywords": ["arc", "usdc", "mcp", "docs"],
+  "mcpServers": "./codex.mcp.json",
+  "interface": {
+    "displayName": "stable-build MCP",
+    "shortDescription": "Arc docs search over MCP",
+    "longDescription": "Adds the Arc docs MCP server (https://docs.arc.io/mcp) so the agent can search and read Arc documentation. Circle's own Codex plugin already provides Circle's codegen MCP, so it is not repeated here. Not affiliated with Circle.",
+    "developerName": "stable-build contributors",
+    "category": "Coding",
+    "capabilities": ["Read"],
+    "websiteURL": "https://github.com/pedro-pelicioni/stable-build",
+    "defaultPrompt": [
+      "Search the Arc docs for the gas fee floor"
+    ]
+  }
+}

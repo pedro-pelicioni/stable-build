@@ -1,0 +1,16 @@
+name: contracts
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Arc Foundry
+        run: |
+          gh release download --repo circlefin/arc-foundry --pattern "*linux*x86_64*.tar.gz" --output arc-foundry.tar.gz
+          tar -xzf arc-foundry.tar.gz
+          mkdir -p "$HOME/.local/bin" && mv forge "$HOME/.local/bin/arc-forge"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - run: arc-forge test --network arc

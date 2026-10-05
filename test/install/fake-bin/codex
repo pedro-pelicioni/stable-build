@@ -1,0 +1,174 @@
+#!/usr/bin/env node
+// Test double for the `codex` CLI, used by test/install/roundtrip.sh.
+//
+// Appends every argv to $SB_FAKE_LOG and emulates `codex plugin` / `codex plugin marketplace`
+// as read from openai/codex@4ad985e (codex-rs/cli/src/plugin_cmd.rs, marketplace_cmd.rs):
+//   plugin marketplace list --json -> {"marketplaces":[{name, root, marketplaceSource:{sourceType, source}}]}
+//   plugin list --json             -> {"installed":[{pluginId, name, marketplaceName, version, installed, enabled, ...}], "available":[]}
+// Real Codex records marketplaces and plugins in $CODEX_HOME/config.toml; this double appends
+// a table on add and deletes exactly that table on remove, so the user's own tables must come
+// through byte-for-byte. Real Codex behavior here is UNVERIFIED (codex is not installed locally).
+// GitHub sources "owner/repo[@ref]" resolve to $SB_FAKE_REPOS/owner/repo.
+// $SB_FAKE_CODEX_USER_MCP lists MCP server names that `codex mcp get` reports as configured.
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+const argv = process.argv.slice(2);
+if (process.env.SB_FAKE_LOG) fs.appendFileSync(process.env.SB_FAKE_LOG, ['codex', ...argv].join(' ') + '\n');
+
+const home = process.env.HOME || '/nonexistent';
+const codexHome = process.env.CODEX_HOME || path.join(home, '.codex');
+const stateFile = path.join(codexHome, 'fake-codex-state.json');
+const tomlFile = path.join(codexHome, 'config.toml');
+const say = (s) => process.stdout.write(s + '\n');
+function fail(msg, code) { process.stderr.write('Error: ' + msg + '\n'); process.exit(code || 1); }
+const readJSON = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
+const state = () => readJSON(stateFile, { marketplaces: {}, plugins: {} });
+const saveState = (s) => { fs.mkdirSync(codexHome, { recursive: true }); fs.writeFileSync(stateFile, JSON.stringify(s, null, 2) + '\n'); };
+function copyDir(src, dst) { fs.rmSync(dst, { recursive: true, force: true }); fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.cpSync(src, dst, { recursive: true }); }
+function tomlAppend(block) {
+  fs.mkdirSync(codexHome, { recursive: true });
+  const cur = fs.existsSync(tomlFile) ? fs.readFileSync(tomlFile, 'utf8') : '';
+  fs.writeFileSync(tomlFile, cur + block);
+}
+function tomlRemove(block) {
+  if (!fs.existsSync(tomlFile)) return;
+  const cur = fs.readFileSync(tomlFile, 'utf8');
+  const i = cur.indexOf(block);
+  if (i >= 0) fs.writeFileSync(tomlFile, cur.slice(0, i) + cur.slice(i + block.length));
+}
+const args = argv.slice();
+function takeOpt(name) { const i = args.indexOf(name); if (i < 0) return undefined; const v = args[i + 1]; args.splice(i, 2); return v; }
+function takeFlag(name) { const i = args.indexOf(name); if (i < 0) return false; args.splice(i, 1); return true; }
+
+function marketplaceManifest(dir) {
+  for (const rel of ['.agents/plugins/marketplace.json', '.claude-plugin/marketplace.json']) {
+    const mf = readJSON(path.join(dir, rel), null);
+    if (mf && mf.name) return mf;
+  }
+  return fail(`no marketplace manifest in ${dir}`);
+}
+
+const [a0, a1, a2] = args;
+if (a0 === '--version' || a0 === '-V') { say('codex-cli 0.160.0'); process.exit(0); }
+
+if (a0 === 'plugin') {
+  if (a1 === '--help' || a1 === '-h' || a1 === undefined) { say('Usage: codex plugin <add|list|marketplace|remove> (fake)'); process.exit(0); }
+  if (a1 === 'marketplace') {
+    args.splice(0, 3);
+    const json = takeFlag('--json');
+    const s = state();
+    if (a2 === 'list') {
+      const marketplaces = Object.entries(s.marketplaces).map(([name, m]) => ({ name, root: m.root, marketplaceSource: { sourceType: m.sourceType, source: m.source } }));
+      say(JSON.stringify({ marketplaces }, null, 2));
+      process.exit(0);
+    }
+    if (a2 === 'add') {
+      const ref = takeOpt('--ref');
+      const src = args[0];
+      if (!src) fail('missing SOURCE');
+      let dir; let sourceType; let root;
+      if (/^(\/|\.\/|\.\.\/|~\/)/.test(src)) {
+        dir = path.resolve(src.replace(/^~(?=\/)/, home)); sourceType = 'local'; root = dir;
+        if (!fs.existsSync(dir)) fail(`marketplace path does not exist: ${dir}`);
+      } else {
+        const m = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)(?:@([A-Za-z0-9_./-]+))?$/.exec(src);
+        if (!m) fail(`invalid marketplace source: ${src}`);
+        dir = path.join(process.env.SB_FAKE_REPOS || '/nonexistent', m[1], m[2]); sourceType = 'git';
+        if (!fs.existsSync(dir)) fail(`failed to clone ${m[1]}/${m[2]} (fake: no fixture)`);
+      }
+      const mf = marketplaceManifest(dir);
+      if (s.marketplaces[mf.name]) {
+        const out = { marketplaceName: mf.name, installedRoot: s.marketplaces[mf.name].root, alreadyAdded: true };
+        say(json ? JSON.stringify(out, null, 2) : `Marketplace \`${mf.name}\` is already added from ${src}.`);
+        process.exit(0);
+      }
+      if (sourceType === 'git') { root = path.join(codexHome, 'marketplaces', mf.name); copyDir(dir, root); }
+      const block = `\n[marketplaces.${mf.name}]\nsource_type = "${sourceType}"\nsource = "${src}"\n` + (ref ? `ref = "${ref}"\n` : '');
+      tomlAppend(block);
+      s.marketplaces[mf.name] = { root, sourceType, source: src, ref: ref || null, fixture: dir, block };
+      saveState(s);
+      say(json ? JSON.stringify({ marketplaceName: mf.name, installedRoot: root, alreadyAdded: false }, null, 2) : `Added marketplace \`${mf.name}\` from ${src}.\nInstalled marketplace root: ${root}`);
+      process.exit(0);
+    }
+    if (a2 === 'upgrade') {
+      const names = args[0] ? [args[0]] : Object.keys(s.marketplaces).filter((n) => s.marketplaces[n].sourceType === 'git');
+      for (const n of names) {
+        const m = s.marketplaces[n];
+        if (!m) fail(`marketplace \`${n}\` is not configured`);
+        if (m.sourceType === 'git') copyDir(m.fixture, m.root);
+      }
+      say(json ? JSON.stringify({ selectedMarketplaces: names, upgradedRoots: names.map((n) => s.marketplaces[n].root), errors: [] }, null, 2) : `Upgraded marketplace \`${names.join(', ')}\` to the latest configured revision.`);
+      process.exit(0);
+    }
+    if (a2 === 'remove') {
+      const n = args[0];
+      const m = s.marketplaces[n];
+      if (!m) fail(`marketplace \`${n}\` is not configured`);
+      tomlRemove(m.block);
+      if (m.sourceType === 'git') fs.rmSync(m.root, { recursive: true, force: true });
+      delete s.marketplaces[n];
+      saveState(s);
+      say(json ? JSON.stringify({ marketplaceName: n, installedRoot: m.sourceType === 'git' ? m.root : null }, null, 2) : `Removed marketplace \`${n}\`.`);
+      process.exit(0);
+    }
+    fail(`fake codex: unsupported: ${argv.join(' ')}`, 64);
+  }
+  args.splice(0, 2);
+  const json = takeFlag('--json');
+  const s = state();
+  if (a1 === 'list') {
+    takeFlag('--available');
+    const installed = Object.entries(s.plugins).map(([id, p]) => ({
+      pluginId: id, name: id.split('@')[0], marketplaceName: id.split('@')[1], version: p.version,
+      installed: true, enabled: true, source: { source: 'local', path: p.src }, installPolicy: 'AVAILABLE', authPolicy: 'ON_INSTALL',
+    }));
+    say(JSON.stringify({ installed, available: [] }, null, 2));
+    process.exit(0);
+  }
+  if (a1 === 'add') {
+    const id = args[0];
+    if (!id || !id.includes('@')) fail('use PLUGIN@MARKETPLACE');
+    const [name, mkt] = id.split('@');
+    const m = s.marketplaces[mkt];
+    if (!m) fail(`marketplace \`${mkt}\` not found`);
+    const mf = marketplaceManifest(m.root);
+    const entry = (mf.plugins || []).find((p) => p.name === name);
+    if (!entry) fail(`plugin \`${name}\` not found in marketplace \`${mkt}\``);
+    const src = path.resolve(m.root, typeof entry.source === 'string' ? entry.source : entry.source.path);
+    const pj = readJSON(path.join(src, '.codex-plugin', 'plugin.json'), null) || readJSON(path.join(src, '.claude-plugin', 'plugin.json'), {});
+    const version = pj.version || 'local';
+    const dst = path.join(codexHome, 'plugins', 'cache', mkt, name, version);
+    if (s.plugins[id]) fs.rmSync(s.plugins[id].installedPath, { recursive: true, force: true });
+    copyDir(src, dst);
+    const block = `\n[plugins."${id}"]\nenabled = true\n`;
+    if (!s.plugins[id]) tomlAppend(block);
+    s.plugins[id] = { version, installedPath: dst, src, block };
+    saveState(s);
+    say(json ? JSON.stringify({ pluginId: id, name, marketplaceName: mkt, version, installedPath: dst, authPolicy: 'ON_INSTALL' }, null, 2) : `Added plugin \`${name}\` from marketplace \`${mkt}\`.\nInstalled plugin root: ${dst}`);
+    process.exit(0);
+  }
+  if (a1 === 'remove') {
+    const id = args[0];
+    const p = s.plugins[id];
+    if (!p) fail(`plugin \`${id}\` is not installed`);
+    tomlRemove(p.block);
+    fs.rmSync(p.installedPath, { recursive: true, force: true });
+    for (let d = path.dirname(p.installedPath); d.startsWith(path.join(codexHome, 'plugins', 'cache')) && d !== path.join(codexHome, 'plugins', 'cache'); d = path.dirname(d)) {
+      try { fs.rmdirSync(d); } catch (e) { break; }
+    }
+    delete s.plugins[id];
+    saveState(s);
+    say(json ? JSON.stringify({ pluginId: id, name: id.split('@')[0], marketplaceName: id.split('@')[1] }, null, 2) : `Removed plugin \`${id.split('@')[0]}\` from marketplace \`${id.split('@')[1]}\`.`);
+    process.exit(0);
+  }
+  fail(`fake codex: unsupported: ${argv.join(' ')}`, 64);
+}
+
+if (a0 === 'mcp' && a1 === 'get') {
+  const userMcp = (process.env.SB_FAKE_CODEX_USER_MCP || '').split(/\s+/).filter(Boolean);
+  if (userMcp.includes(a2)) { say(`${a2}\n  enabled: true\n  transport: streamable_http`); process.exit(0); }
+  fail(`No MCP server named '${a2}' found.`);
+}
+fail(`fake codex: unsupported: ${argv.join(' ')}`, 64);

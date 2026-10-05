@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pedro-pelicioni/stable-build/blob/main/plugins/stable-build/skills/new-app/templates/payouts/docs/memo-schema.v1.json",
+  "title": "sb-payouts memo v1",
+  "description": "UTF-8 JSON carried in Memo.memo(...) memoData. At most 256 bytes. Public forever: opaque references only. memoId = keccak256(abi.encodePacked(bytes16 batchId, uint32 rowIndex)).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "app", "b", "i", "ref"],
+  "properties": {
+    "v": { "const": 1, "description": "Schema version. Decoders refuse anything else." },
+    "app": { "const": "sb-payouts", "description": "Application tag." },
+    "b": { "type": "string", "pattern": "^[0-9a-f]{32}$", "description": "Batch id: bytes16 as 32 lowercase hex characters, no 0x." },
+    "i": { "type": "integer", "minimum": 0, "maximum": 4294967295, "description": "Row index inside the batch (uint32)." },
+    "ref": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9._:/#-]+$", "description": "Opaque reference from the CSV. Never a name, email or note." }
+  }
+}

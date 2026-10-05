@@ -1,0 +1,15 @@
+{
+  "session_id": "00000000-0000-0000-0000-000000000001",
+  "transcript_path": "__ROOT__/.transcript.jsonl",
+  "cwd": "__ROOT__",
+  "permission_mode": "default",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "__ROOT__/src/pay.ts",
+    "content": "import { parseUnits, parseGwei } from \"viem\";\n\nexport async function tip(wallet: any, account: `0x${string}`, to: `0x${string}`, amount: string) {\n  return wallet.sendTransaction({\n    account,\n    to,\n    value: parseUnits(amount, 6),\n    maxFeePerGas: parseGwei(\"1\"),\n  });\n}\n"
+  },
+  "tool_response": { "filePath": "__ROOT__/src/pay.ts", "type": "create" },
+  "tool_use_id": "toolu_test_write",
+  "duration_ms": 3
+}

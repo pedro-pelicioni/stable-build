@@ -1,0 +1,233 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly docs-drift alarm: every gotchas.json evidence quote must still be on its docs page.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  # Claude Code version used for `claude plugin validate --strict` (verified locally: 2.1.280).
+  CLAUDE_CODE_VERSION: "2.1.280"
+  DISABLE_AUTOUPDATER: "1"
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+
+jobs:
+  static:
+    name: static checks
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: List shell scripts
+        id: shell
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/bash-files"
+          : > "$RUNNER_TEMP/sh-files"
+          git ls-files -z | while IFS= read -r -d '' f; do
+            [ -f "$f" ] || continue
+            first=$(head -n 1 "$f" 2>/dev/null || true)
+            case "$first" in
+              '#!'*bash*) echo "$f" >> "$RUNNER_TEMP/bash-files" ;;
+              '#!'*/sh|'#!'*/sh' '*|'#!'*'env sh'*) echo "$f" >> "$RUNNER_TEMP/sh-files" ;;
+              *) case "$f" in *.sh) echo "$f" >> "$RUNNER_TEMP/bash-files" ;; esac ;;
+            esac
+          done
+          echo "bash scripts:"; cat "$RUNNER_TEMP/bash-files"
+          echo "POSIX sh scripts:"; cat "$RUNNER_TEMP/sh-files"
+
+      - name: Syntax check (bash -n, sh -n)
+        run: |
+          set -euo pipefail
+          while IFS= read -r f; do echo "bash -n $f"; bash -n "$f"; done < "$RUNNER_TEMP/bash-files"
+          while IFS= read -r f; do echo "sh -n $f"; sh -n "$f"; done < "$RUNNER_TEMP/sh-files"
+
+      - name: shellcheck
+        run: |
+          set -euo pipefail
+          if ! command -v shellcheck >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          fi
+          shellcheck --version
+          status=0
+          while IFS= read -r f; do echo "shellcheck -s bash $f"; shellcheck -x -s bash "$f" || status=1; done < "$RUNNER_TEMP/bash-files"
+          while IFS= read -r f; do echo "shellcheck -s sh $f"; shellcheck -x -s sh "$f" || status=1; done < "$RUNNER_TEMP/sh-files"
+          exit "$status"
+
+      - name: Node tests
+        run: npm test
+
+      - name: Names, brand rule and manifest consistency
+        run: node tools/check-names.mjs
+
+      - name: Generated skill catalog is current
+        run: node tools/build-catalog.mjs --check
+
+      - name: Links and evidence structure (offline)
+        run: node tools/check-links.mjs --offline
+
+      - name: Translated docs match their English originals
+        run: node tools/check-docs-sync.mjs
+
+      - name: Install Claude Code CLI (for the validator only)
+        run: |
+          set -euo pipefail
+          if ! command -v claude >/dev/null 2>&1; then
+            npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+          fi
+          claude --version
+
+      - name: claude plugin validate --strict
+        run: |
+          set -euo pipefail
+          # Never touch a real profile: validate from an empty temporary HOME.
+          HOME="$(mktemp -d)"
+          export HOME
+          export CLAUDE_CONFIG_DIR="$HOME/.claude" CODEX_HOME="$HOME/.codex" STABLE_BUILD_HOME="$HOME/.stable-build"
+          claude plugin validate --strict .
+          for p in plugins/*/; do
+            claude plugin validate --strict "$p"
+          done
+
+      # Newer validators add checks (MCP entries need 2.1.281+). Report them early without blocking.
+      - name: claude plugin validate --strict (latest Claude Code, advisory)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          prefix="$(mktemp -d)"
+          npm install --prefix "$prefix" --no-audit --no-fund "@anthropic-ai/claude-code@latest"
+          HOME="$(mktemp -d)"
+          export HOME
+          export CLAUDE_CONFIG_DIR="$HOME/.claude" CODEX_HOME="$HOME/.codex" STABLE_BUILD_HOME="$HOME/.stable-build"
+          "$prefix/node_modules/.bin/claude" --version
+          "$prefix/node_modules/.bin/claude" plugin validate --strict .
+          for p in plugins/*/; do
+            "$prefix/node_modules/.bin/claude" plugin validate --strict "$p"
+          done
+
+  links:
+    name: links and docs drift
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Check every URL and evidence quote
+        run: node tools/check-links.mjs
+
+      - name: Open an issue when the weekly drift check fails
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          title="Docs drift or broken links (weekly check)"
+          existing=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still failing: $RUN_URL"
+          else
+            gh issue create --title "$title" --body "The weekly link and evidence check failed: $RUN_URL. Re-verify the affected rules against docs.arc.io and update data/gotchas.json (quote and verified_at)."
+          fi
+
+  roundtrip:
+    name: install round trip (${{ matrix.os }})
+    if: github.event_name != 'schedule'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            bash: bash
+          # /bin/bash on macOS is 3.2: install.sh must keep working there.
+          - os: macos-latest
+            bash: /bin/bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Shell version
+        run: ${{ matrix.bash }} --version | head -n 1
+
+      - name: Truncated download is a no-op
+        run: |
+          set -euo pipefail
+          test -f install.sh || { echo "::error::install.sh is missing"; exit 1; }
+          sandbox="$(mktemp -d)"
+          size=$(wc -c < install.sh | tr -d ' ')
+          # Cut inside the script, including just before the final `main "$@"` line.
+          for n in 200 2000 $((size / 2)) $((size - 11)); do
+            { [ "$n" -gt 0 ] && [ "$n" -lt $((size - 10)) ]; } || continue
+            echo "running the first $n of $size bytes"
+            head -c "$n" install.sh | env HOME="$sandbox" CLAUDE_CONFIG_DIR="$sandbox/.claude" CODEX_HOME="$sandbox/.codex" \
+              STABLE_BUILD_HOME="$sandbox/.stable-build" PATH="$PWD/test/install/fake-bin:$PATH" \
+              ${{ matrix.bash }} -s -- --yes >/dev/null 2>&1 || true
+          done
+          leftovers="$(find "$sandbox" -mindepth 1 | head -n 20)"
+          if [ -n "$leftovers" ]; then
+            echo "::error::a truncated install.sh wrote files:"; echo "$leftovers"; exit 1
+          fi
+
+      - name: Round trip with stub CLIs (install, reinstall, update, uninstall)
+        run: |
+          set -euo pipefail
+          test -f test/install/roundtrip.sh || { echo "::error::test/install/roundtrip.sh is missing"; exit 1; }
+          ${{ matrix.bash }} test/install/roundtrip.sh
+
+  starter:
+    name: payouts starter (scaffold, test, build, scan)
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Guard scan of the template reports 0 errors
+        run: node plugins/stable-build/scripts/guard.mjs --scan plugins/stable-build/skills/new-app/templates/payouts
+
+      # Offline tests against recorded Arc Testnet receipts; nothing here signs or sends.
+      - name: Scaffold into a temp directory, then npm ci, test and build
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/ci-payouts"
+          node plugins/stable-build/skills/new-app/scripts/scaffold.mjs --starter payouts --dir "$app" --name ci-payouts
+          cd "$app"
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+          node "$GITHUB_WORKSPACE/plugins/stable-build/scripts/guard.mjs" --scan .

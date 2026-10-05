@@ -1,0 +1,18 @@
+{
+  "session_id": "00000000-0000-0000-0000-000000000001",
+  "transcript_path": "__ROOT__/.transcript.jsonl",
+  "cwd": "__ROOT__",
+  "permission_mode": "default",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "MultiEdit",
+  "tool_input": {
+    "file_path": "__ROOT__/src/pay.ts",
+    "edits": [
+      { "old_string": "value: parseUnits(amount, 18),", "new_string": "value: parseUnits(amount, 6),", "replace_all": false },
+      { "old_string": "maxFeePerGas: parseGwei(\"20\"),", "new_string": "maxFeePerGas: parseGwei(\"1\"),", "replace_all": false }
+    ]
+  },
+  "tool_response": { "filePath": "__ROOT__/src/pay.ts" },
+  "tool_use_id": "toolu_test_multiedit",
+  "duration_ms": 2
+}

@@ -1,0 +1,19 @@
+{
+  "status": "budget_exceeded",
+  "appId": "app_7f3c2a91",
+  "threadId": "thr_51d0e8c4",
+  "sandboxId": null,
+  "finalText": "",
+  "todos": null,
+  "filesChanged": [],
+  "fileDiffs": [],
+  "contextFiles": [],
+  "workspaceFiles": [],
+  "deployments": [],
+  "artifacts": { "contractSources": [], "abis": [], "metadata": [] },
+  "webUrl": "https://studio.arc.io/app/${APP}",
+  "questions": null,
+  "errorMessage": null,
+  "traceId": null,
+  "budget": { "scope": "daily" }
+}

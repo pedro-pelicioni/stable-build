@@ -1,0 +1,39 @@
+{
+  "status": "needs_input",
+  "appId": "app_7f3c2a91",
+  "threadId": "thr_51d0e8c4",
+  "sandboxId": "sbx_0a9b8c7d",
+  "finalText": "",
+  "todos": null,
+  "filesChanged": [],
+  "fileDiffs": [],
+  "contextFiles": [],
+  "workspaceFiles": [],
+  "deployments": [],
+  "artifacts": { "contractSources": [], "abis": [], "metadata": [] },
+  "webUrl": "https://studio.arc.io/app/${APP}",
+  "questions": {
+    "title": "Plan the token",
+    "contextTag": "onchain_planning",
+    "allowSkip": true,
+    "questions": [
+      {
+        "id": "chain",
+        "prompt": "Which network should the token deploy to?",
+        "options": [ { "id": "arc_testnet", "label": "Arc Testnet" }, { "id": "base_mainnet", "label": "Base Mainnet" } ],
+        "allowMultiple": false,
+        "allowFreeform": false
+      },
+      {
+        "id": "supply",
+        "prompt": "Initial supply?",
+        "options": [],
+        "allowMultiple": false,
+        "allowFreeform": true
+      }
+    ]
+  },
+  "errorMessage": null,
+  "traceId": null,
+  "budget": null
+}

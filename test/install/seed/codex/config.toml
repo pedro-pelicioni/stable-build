@@ -1,0 +1,9 @@
+model = "gpt-5"
+
+[mcp_servers.github]
+command = "github-mcp"
+args = ["--read-only"]
+
+[profiles.work]
+model = "o4"
+approval_policy = "on-request"

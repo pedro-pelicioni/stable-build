@@ -1,0 +1,968 @@
+/* stable-build landing page. No framework, no build step.
+
+   Brand tokens: ink #0B1220, deep #121A2B, paper #F4F1EA, muted #8A94A8,
+   amber #F5B83D, mint #4FD1A5, coral #FF7A6B. Dark by default; light via prefers-color-scheme.
+
+   Derived brand tokens for the light theme. Inverted literally, muted, amber, mint and coral fail
+   AA as text on paper (2.71:1, 1.58:1, 1.69:1, 2.26:1), so text on paper uses these instead:
+     --paper-2         #EAE5DA  band / secondary background on paper
+     --muted-on-paper  #545D70  secondary text on paper
+     --amber-ink       #7A5200  links and highlights on paper
+     --mint-ink        #0B6B4C  success / "fixed" text on paper
+     --coral-ink       #A63A2A  gotcha / warning text on paper
+   On paper, amber, mint and coral stay as fills and borders only. Code panels, command bars and
+   guard notices stay dark in both themes. Coral marks every gotcha (error and warn alike); amber
+   is for links, the Copy CTA and step numbers. */
+
+:root {
+  --ink: #0B1220;
+  --deep: #121A2B;
+  --paper: #F4F1EA;
+  --muted: #8A94A8;
+  --amber: #F5B83D;
+  --mint: #4FD1A5;
+  --coral: #FF7A6B;
+
+  --paper-2: #EAE5DA;
+  --muted-on-paper: #545D70;
+  --amber-ink: #7A5200;
+  --mint-ink: #0B6B4C;
+  --coral-ink: #A63A2A;
+
+  --bg: var(--ink);
+  --band: var(--deep);
+  --text: var(--paper);
+  --text-2: var(--muted);
+  --line: rgba(244, 241, 234, 0.12);
+  --line-strong: rgba(244, 241, 234, 0.26);
+  --link: var(--amber);
+  --ok-text: var(--mint);
+  --warn-text: var(--coral);
+  --focus: var(--amber);
+  --panel: var(--deep);       /* command bars */
+  --panel-2: var(--ink);      /* editors inside the guard band */
+  --panel-line: rgba(244, 241, 234, 0.12);
+
+  --font-ui: "Space Grotesk", "Space Grotesk Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --gutter: clamp(16px, 4vw, 40px);
+  --max: 1180px;
+  --radius: 10px;
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: var(--paper);
+    --band: var(--paper-2);
+    --text: var(--ink);
+    --text-2: var(--muted-on-paper);
+    --line: rgba(11, 18, 32, 0.13);
+    --line-strong: rgba(11, 18, 32, 0.3);
+    --link: var(--amber-ink);
+    --ok-text: var(--mint-ink);
+    --warn-text: var(--coral-ink);
+    --focus: var(--ink);
+    --panel: var(--deep);
+    --panel-2: var(--ink);
+    color-scheme: light;
+  }
+}
+
+/* Metric-matched stand-in for Space Grotesk while the web font loads, so the swap does not
+   re-wrap text. Measured in Chromium against Arial/Helvetica (regular and bold). */
+@font-face {
+  font-family: "Space Grotesk Fallback";
+  src: local("Arial"), local("ArialMT"), local("Helvetica"), local("Liberation Sans"), local("Arimo");
+  font-weight: 300 500;
+  size-adjust: 109.6%;
+  ascent-override: 89.4%;
+  descent-override: 26.5%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Space Grotesk Fallback";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Helvetica Bold"), local("Liberation Sans Bold"), local("Arimo Bold");
+  font-weight: 600 700;
+  size-adjust: 102.2%;
+  ascent-override: 95.9%;
+  descent-override: 28.4%;
+  line-gap-override: 0%;
+}
+
+/* Text measures are in em, not ch: 1ch is the width of "0", which differs between the fallback and
+   Space Grotesk, so ch-based widths would re-wrap text when the web font arrives.
+   (In Space Grotesk, 1ch is about 0.603em at weight 400 and 0.646em at 600.) */
+
+/* ---------- Base ---------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  font-feature-settings: "ss01" 0;
+  overflow-wrap: break-word;
+}
+
+/* While boot.js swaps in the Portuguese copy (at most 1 s), hold the translated parts back
+   instead of painting English first and then replacing it. */
+.i18n-pending main,
+.i18n-pending .site-footer,
+.i18n-pending .site-nav,
+.i18n-pending .skip { visibility: hidden; }
+
+::selection { background: var(--amber); color: var(--ink); }
+
+img, svg { display: block; max-width: 100%; }
+
+h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
+p, ul, ol, dl, dd, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+a:hover { text-decoration-thickness: 2px; }
+
+code {
+  font-family: var(--font-code);
+  font-size: 0.86em;
+  font-weight: 400;
+  font-variant-ligatures: none;
+}
+/* Inline code: a chip that does not break at hyphens. Long values carry class "u" and may wrap. */
+:not(pre) > code {
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+  background: var(--line);
+  color: var(--text);
+  white-space: nowrap;
+}
+:not(pre) > code.u { white-space: normal; overflow-wrap: anywhere; }
+a > code { background: none; padding: 0; color: inherit; }
+
+mark { background: none; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -100px;
+  z-index: 10;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--amber);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+.wrap {
+  width: 100%;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ---------- Brand ---------- */
+
+.brand {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  text-decoration: none;
+}
+.keel-hull { fill: var(--amber); }
+.keel-fin { fill: currentColor; }
+.wordmark {
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* ---------- Header ---------- */
+
+/* Below 760px the section links get their own row under the brand; from 760px they sit inline. */
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding-block: 14px 6px;
+}
+.site-nav {
+  order: 3;
+  flex: 1 0 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.site-nav::-webkit-scrollbar { display: none; }
+.site-nav ul { display: flex; gap: 20px; white-space: nowrap; }
+.site-nav a { display: inline-block; padding-block: 8px; }
+.site-nav a, .gh {
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.site-nav a:hover, .gh:hover { color: var(--text); }
+
+/* min-height reserves the EN/PT toggle's row before main.js reveals it. */
+.header-actions { display: flex; align-items: center; gap: 18px; min-height: 40px; }
+
+.lang {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+}
+/* Hidden until main.js runs, but keeps its space so the header does not grow when it appears. */
+.lang[hidden] { display: inline-flex; visibility: hidden; }
+.lang button {
+  min-width: 40px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-2);
+  font: 600 0.85rem/1 var(--font-ui);
+  cursor: pointer;
+}
+.lang button:hover { color: var(--text); }
+.lang button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+
+@media (min-width: 760px) {
+  .site-header { flex-wrap: nowrap; column-gap: 12px; padding-block: 18px; }
+  .site-nav { order: 0; flex: 0 1 auto; }
+  .site-nav ul { gap: 18px; }
+  .site-nav a { padding-block: 4px; }
+}
+@media (min-width: 1000px) {
+  .site-nav ul { gap: 28px; }
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  padding-top: clamp(32px, 7vw, 96px);
+  padding-bottom: clamp(40px, 6vw, 72px);
+}
+.hero h1 {
+  max-width: 12.9em;
+  font-size: clamp(2.5rem, 1.1rem + 4.6vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+.lede {
+  max-width: 35em;
+  margin-top: 24px;
+  font-size: clamp(1.125rem, 1rem + 0.45vw, 1.3rem);
+  line-height: 1.5;
+  color: var(--text);
+}
+.hero .cmd { max-width: 1040px; margin-top: 36px; }
+.hero-note {
+  max-width: 38.6em;
+  margin-top: 14px;
+  color: var(--text-2);
+  font-size: 0.95rem;
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+  margin-top: 28px;
+}
+.status { color: var(--text-2); font-size: 0.92rem; max-width: 31.4em; }
+.affil {
+  margin-top: 36px;
+  color: var(--text-2);
+  font-size: 0.92rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+}
+.btn--ghost {
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+}
+.btn--ghost:hover { border-color: var(--text); }
+
+/* ---------- Command bars ---------- */
+
+.cmd-label {
+  margin-bottom: 10px;
+  color: var(--text-2);
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+.cmd + .cmd-label { margin-top: 22px; }
+
+.cmd-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--paper);
+  --focus: var(--amber);
+}
+.sh {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 15px 0 15px 18px;
+  font-family: var(--font-code);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+/* URLs carry <wbr> after each "/", so lines break between path segments; break-word only
+   splits a word when nothing else fits. */
+.sh code { font-size: inherit; background: none; padding: 0; overflow-wrap: break-word; }
+.sh .l {
+  display: block;
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+.sh .l::before {
+  content: "$ ";
+  color: var(--amber);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sh--cc .l::before { content: "> "; }
+/* Hyphenated pieces (pedro-pelicioni/, stable-build@, --dry-run) never split at their hyphen. */
+.sh .nb { white-space: nowrap; }
+.cmd--hero .sh { font-size: clamp(0.82rem, 0.72rem + 0.32vw, 0.95rem); padding-block: 19px; }
+
+/* min-width fits "Copied"/"Copiado" in either font, so neither the click nor the font swap
+   changes the button's width and re-wraps the command beside it. */
+.copy {
+  flex: none;
+  margin: 9px 9px 9px 0;
+  min-width: 6.2em;
+  min-height: 34px;
+  padding: 6px 13px;
+  border: 1px solid rgba(244, 241, 234, 0.28);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--paper);
+  font: 600 0.85rem/1 var(--font-ui);
+  cursor: pointer;
+}
+.copy:hover { border-color: var(--paper); }
+/* Hidden until main.js runs (no script, no Copy), but keeps its space so nothing shifts. */
+.copy[hidden] { display: inline-block; visibility: hidden; }
+.copy--primary {
+  border-color: var(--amber);
+  background: var(--amber);
+  color: var(--ink);
+}
+.cmd--hero .copy { margin: 12px 12px 12px 0; min-width: 6.7em; min-height: 40px; padding-inline: 16px; }
+.copy--primary:hover { background: #FFC85A; border-color: #FFC85A; }
+.copy.is-done { border-color: var(--mint); background: transparent; color: var(--mint); }
+
+/* One command per row, each with its own Copy (slash commands run one per message). */
+.cmd-lines {
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--paper);
+  --focus: var(--amber);
+}
+.cmd-lines > li + li { border-top: 1px solid var(--panel-line); }
+.cmd-lines .cmd-row { align-items: center; border: 0; border-radius: 0; background: none; }
+.cmd-lines .sh { padding-block: 8px; }
+.copy--sm { margin: 5px 6px 5px 0; min-width: 5.9em; min-height: 30px; padding: 4px 10px; font-size: 0.8rem; }
+
+/* ---------- Sections ---------- */
+
+/* The divider is drawn at the content width, not across the gutters. */
+.section {
+  padding-block: clamp(56px, 7vw, 96px);
+  background: linear-gradient(var(--line), var(--line)) center top / calc(100% - 2 * var(--gutter)) 1px no-repeat;
+}
+.section-head { max-width: 38.6em; }
+.section-head h2, .guard-intro h2 {
+  font-size: clamp(1.9rem, 1.2rem + 2.4vw, 3rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+.section-head > p { margin-top: 18px; color: var(--text-2); }
+.section-head p code { color: var(--text); }
+
+h3 { font-size: 1.2rem; line-height: 1.3; letter-spacing: -0.01em; }
+
+/* What one command installs */
+
+.installs { margin-top: 44px; }
+.inst {
+  display: grid;
+  gap: 10px;
+  padding-block: 26px;
+  border-top: 1px solid var(--line);
+}
+.inst:last-child { border-bottom: 1px solid var(--line); }
+.owner { margin-top: 4px; color: var(--text-2); font-size: 0.9rem; }
+.inst-body { max-width: 37.4em; }
+.inst-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  color: var(--text-2);
+  font-size: 0.92rem;
+}
+.inst-skip { margin-left: 4px; white-space: nowrap; }
+@media (min-width: 900px) {
+  .inst {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 5fr) minmax(0, 3fr);
+    gap: 32px;
+    align-items: start;
+  }
+  .inst-meta { flex-direction: column; gap: 6px; }
+  .inst-skip { margin-left: 0; }
+}
+
+/* ---------- Guard ---------- */
+
+.section--guard { background: var(--band); }
+.guard-head { display: grid; gap: 32px; }
+.guard-intro { max-width: 36.2em; }
+.guard-intro > p { margin-top: 18px; color: var(--text-2); }
+@media (min-width: 960px) {
+  .guard-head { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 64px; align-items: end; }
+}
+
+.why {
+  padding: 20px 22px;
+  border-left: 3px solid var(--coral);
+  background: var(--bg);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.why p { margin-top: 8px; }
+.why p + p { margin-top: 10px; }
+
+.props {
+  display: grid;
+  gap: 24px 40px;
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+.props dt { font-weight: 600; }
+@media (min-width: 640px) { .props { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1100px) { .props { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.props dd { margin-top: 2px; color: var(--text-2); font-size: 0.97rem; }
+.props dd code { color: var(--text); }
+
+.demo { display: grid; gap: 36px; max-width: 1000px; margin-top: 48px; min-width: 0; }
+.step { min-width: 0; }
+.step-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  font-size: 1.1rem;
+}
+.step-n {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--link);
+  border-radius: 6px;
+  color: var(--link);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.step-n--ok { border-color: var(--ok-text); color: var(--ok-text); }
+.step-note { margin-top: 12px; color: var(--text-2); font-size: 0.95rem; }
+
+.editor {
+  overflow: hidden;
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--paper);
+  --focus: var(--amber);
+}
+.editor-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--panel-line);
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.file { color: var(--paper); }
+.tool {
+  padding: 2px 8px;
+  border: 1px solid rgba(244, 241, 234, 0.2);
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+.tool--ok { border-color: var(--mint); color: var(--mint); }
+
+.code {
+  margin: 0;
+  overflow-x: auto;
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  line-height: 1.7;
+  scrollbar-color: rgba(244, 241, 234, 0.25) transparent;
+}
+/* The editor clips its children (overflow: hidden), so the ring is drawn inside the panel. */
+.code:focus-visible {
+  outline-offset: -2px;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.code code {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  padding-block: 12px;
+  font-size: inherit;
+  overflow-wrap: normal;
+  counter-reset: ln;
+}
+.ln {
+  display: block;
+  padding-right: 24px;
+  white-space: pre;
+  counter-increment: ln;
+}
+.ln::before {
+  content: counter(ln);
+  display: inline-block;
+  width: 5ch;
+  padding-right: 2ch;
+  text-align: right;
+  color: var(--muted);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ln.is-bad {
+  background: rgba(255, 122, 107, 0.13);
+  box-shadow: inset 3px 0 0 var(--coral);
+}
+/* The line the guard reports (file:line in its message). */
+.ln.is-flag::before { color: var(--coral); font-weight: 700; }
+.code .k { color: #AEB8CC; }
+.code .s { color: var(--amber); }
+.code .c { color: #9AA3B5; }
+
+.tok--bad {
+  text-decoration: underline wavy var(--coral);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  text-decoration-skip-ink: none;
+}
+.tok--good {
+  text-decoration: underline solid var(--mint);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  text-decoration-skip-ink: none;
+}
+
+/* Step 3: only the changed lines, numbered as in step 1. */
+.code--diff .ln::before { content: attr(data-ln); }
+.code--diff .sign {
+  display: inline-block;
+  width: 2ch;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ln.is-del { background: rgba(255, 122, 107, 0.1); box-shadow: inset 3px 0 0 var(--coral); }
+.ln.is-del .sign { color: var(--coral); }
+.ln.is-add { background: rgba(79, 209, 165, 0.12); box-shadow: inset 3px 0 0 var(--mint); }
+.ln.is-add .sign { color: var(--mint); }
+.ln.is-add::before { color: var(--mint); }
+.ln.is-gap { color: var(--muted); }
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 122, 107, 0.55);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+}
+.notice-mark { flex: none; margin-top: 3px; color: var(--coral); }
+.notice-text {
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.demo .notice {
+  padding: 16px 18px;
+  background: linear-gradient(rgba(255, 122, 107, 0.09), rgba(255, 122, 107, 0.09)), var(--ink);
+}
+.demo .notice-text { font-size: 0.95rem; }
+.demo .notice-mark { margin-top: 5px; }
+
+.ctx { margin-top: 10px; }
+.ctx summary {
+  cursor: pointer;
+  width: fit-content;
+  color: var(--link);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.ctx[open] summary { margin-bottom: 10px; }
+
+.context {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--muted);
+  font-family: var(--font-code);
+  font-size: 0.76rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+.context code { font-size: inherit; overflow-wrap: anywhere; }
+.context b { color: var(--paper); font-weight: 500; }
+.context .w { color: var(--coral); }
+
+/* The notice slides in, but is never invisible: screenshots and print always show it. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .demo .notice {
+      animation: notice-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 80%;
+    }
+    @keyframes notice-in {
+      from { transform: translateY(10px); }
+      to { transform: none; }
+    }
+  }
+}
+@media print {
+  .demo .notice { animation: none; }
+}
+
+/* Rules */
+
+.rules { margin-top: clamp(56px, 8vw, 88px); }
+.rules-head { max-width: 42.2em; }
+.rules-head p { margin-top: 10px; color: var(--text-2); }
+.rules-head p code { color: var(--text); }
+.rule-list {
+  display: grid;
+  gap: 0 48px;
+  margin-top: 28px;
+}
+.rule-list li {
+  padding-block: 16px;
+  border-top: 1px solid var(--line);
+}
+.rule-id { font-weight: 500; }
+.rule-id code { font-size: 0.9rem; }
+.rule-list p { margin-top: 4px; color: var(--text-2); font-size: 0.95rem; }
+.rule-list p code { color: var(--text); }
+/* Coral is every gotcha: error is a filled chip, warn an outlined one. */
+.sev {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 7px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+  vertical-align: 0.12em;
+}
+.sev--error { background: var(--coral); border-color: var(--coral); color: var(--ink); }
+.sev--warn { color: var(--warn-text); }
+@media (min-width: 820px) {
+  .rule-list { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---------- Journey ---------- */
+
+.route {
+  position: relative;
+  display: grid;
+  gap: 40px;
+  margin-top: 48px;
+}
+.route::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 14px;
+  width: 1px;
+  background: var(--line-strong);
+}
+.stop { position: relative; padding-left: 52px; min-width: 0; }
+.stop-n {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--link);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--link);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.stop h3 { min-height: 30px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.stop h3 code { font-size: 1.05rem; padding: 0.1em 0.35em; }
+.stop-sub { color: var(--text-2); font-weight: 500; font-size: 0.95rem; }
+.stop > p { margin-top: 10px; color: var(--text-2); }
+.stop .stop-more { font-size: 0.93rem; }
+
+.pipe { margin-top: 14px; display: grid; gap: 0; }
+.pipe li {
+  position: relative;
+  padding: 6px 0 6px 18px;
+  border-left: 2px solid var(--line-strong);
+  font-size: 0.93rem;
+}
+.pipe li::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--amber);
+}
+.pipe li:last-child::before { background: var(--mint); }
+
+.roles { margin-top: 12px; display: grid; gap: 8px; }
+.roles div { display: grid; gap: 0; }
+.roles dt code { font-size: 0.86rem; }
+.roles dd { color: var(--text-2); font-size: 0.93rem; }
+
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 0;
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--line-strong);
+  color: var(--text-2);
+  font-family: var(--font-code);
+  font-size: 0.82rem;
+}
+.flow li + li::before {
+  content: "→";
+  content: "→" / "";
+  margin-inline: 0.7em;
+  color: var(--text-2);
+}
+.flow code { font-size: inherit; background: none; padding: 0; color: var(--text-2); white-space: normal; }
+
+@media (min-width: 1040px) {
+  .route { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px; }
+  .route::before { top: 14px; bottom: auto; left: 0; right: 0; width: auto; height: 1px; }
+  .stop { padding-left: 0; padding-top: 52px; }
+}
+
+/* ---------- Install ---------- */
+
+.ways { margin-top: 44px; }
+.way {
+  display: grid;
+  gap: 20px;
+  padding-block: 32px;
+  border-top: 1px solid var(--line);
+}
+.way-head p { margin-top: 10px; color: var(--text-2); font-size: 0.97rem; }
+.way-head p code { color: var(--text); }
+.way-cmds { min-width: 0; }
+.badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 9px;
+  border: 1px solid var(--warn-text);
+  border-radius: 999px;
+  color: var(--warn-text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: 0.15em;
+  white-space: nowrap;
+}
+@media (min-width: 960px) {
+  .way { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 48px; }
+}
+
+.opts { margin-top: 18px; }
+.opts summary {
+  cursor: pointer;
+  color: var(--link);
+  font-weight: 500;
+  width: fit-content;
+}
+.opts table {
+  width: 100%;
+  margin-top: 14px;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.opts th, .opts td {
+  padding: 9px 12px 9px 0;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.opts th { color: var(--text-2); font-weight: 500; }
+.opts td:first-child { white-space: nowrap; }
+.opts td:first-child code { background: none; padding: 0; }
+.opts > p { margin-top: 14px; color: var(--text-2); font-size: 0.92rem; }
+
+.touch {
+  display: grid;
+  gap: 48px;
+  margin-top: 24px;
+  padding-top: 40px;
+  border-top: 1px solid var(--line);
+}
+.touch-list ul { margin-top: 14px; display: grid; gap: 12px; }
+.touch-list li {
+  position: relative;
+  padding-left: 22px;
+  color: var(--text-2);
+}
+.touch-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 9px;
+  height: 2px;
+  background: var(--mint);
+}
+.touch-list li code { color: var(--text); }
+.touch-list > p { margin-top: 18px; }
+.touch-uninstall .cmd { margin-top: 14px; }
+.touch-uninstall > p { margin-top: 12px; color: var(--text-2); font-size: 0.95rem; }
+.touch-list ul { max-width: 42.2em; }
+@media (min-width: 960px) {
+  .touch-list ul { grid-template-columns: 1fr 1fr; gap: 14px 48px; max-width: none; }
+}
+
+/* ---------- Language ---------- */
+
+.lang-grid { display: grid; gap: 40px; }
+.lang-grid .section-head > .cmd-label { margin-top: 22px; }
+.lang-grid .section-head > .cmd + .cmd-label { margin-top: 16px; }
+.fine { font-size: 0.93rem; }
+.notices { display: grid; gap: 14px; align-content: center; }
+.notice--quiet { border-color: var(--panel-line); flex-direction: column; gap: 6px; }
+.notice-lang {
+  color: var(--amber);
+  font-family: var(--font-code);
+  font-size: 0.75rem;
+}
+@media (min-width: 960px) {
+  .lang-grid { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 64px; align-items: center; }
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  padding-block: 56px 72px;
+  border-top: 1px solid var(--line);
+  font-size: 0.95rem;
+}
+.footer-grid { display: grid; gap: 40px; }
+.footer-brand .affil { margin-top: 16px; max-width: 21.7em; }
+.footer-h {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.footer-credits p { color: var(--text-2); max-width: 36.2em; }
+.footer-credits p + p { margin-top: 10px; }
+.footer-links ul { display: grid; gap: 8px; }
+.footer-links a { color: var(--text-2); }
+.footer-links a:hover { color: var(--text); }
+@media (min-width: 900px) {
+  .footer-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 5fr) minmax(0, 2fr); gap: 56px; }
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 560px) {
+  body { font-size: 1rem; }
+  .cmd-row { flex-direction: column; align-items: stretch; gap: 0; }
+  .sh { padding: 14px 16px 8px; }
+  .copy { align-self: flex-end; margin: 0 10px 10px; }
+  .cmd--hero .sh { padding-block: 16px 10px; }
+  .cmd--hero .copy { align-self: stretch; margin: 2px 12px 12px; }
+  .cmd-lines .cmd-row { flex-direction: row; align-items: center; gap: 8px; }
+  .cmd-lines .sh { padding: 8px 0 8px 14px; }
+  .cmd-lines .copy { align-self: center; margin: 5px 6px 5px 0; }
+  .editor-bar { padding-inline: 12px; }
+  .ln::before { width: 4ch; padding-right: 1.5ch; }
+  .why { padding: 16px 18px; }
+}

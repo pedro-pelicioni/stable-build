@@ -1,0 +1,21 @@
+{
+  "status": "completed",
+  "appId": "app_7f3c2a91",
+  "threadId": "thr_51d0e8c4",
+  "sandboxId": null,
+  "finalText": "Updated the landing page.",
+  "todos": null,
+  "filesChanged": ["src/App.tsx"],
+  "fileDiffs": [ { "path": "src/App.tsx", "action": "edit", "addedLines": 3, "removedLines": 1, "isFragment": true, "truncated": false, "hunk": "-a\n+b" } ],
+  "contextFiles": [],
+  "workspaceFiles": [],
+  "deployments": [],
+  "artifacts": { "contractSources": [], "abis": [], "metadata": [] },
+  "webUrl": "https://studio.arc.io/app/${APP}",
+  "previewUrl": "https://studio.arc.io/preview/${APP}",
+  "questions": null,
+  "errorMessage": null,
+  "traceId": null,
+  "budget": null,
+  "somethingNew": 1
+}

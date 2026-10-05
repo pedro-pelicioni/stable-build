@@ -1,0 +1,5 @@
+---
+name: code-review
+description: A user's own skill that shares a name with a built-in command. The installer must leave it alone.
+---
+Seed file for test/install/roundtrip.sh. Never installed anywhere real.

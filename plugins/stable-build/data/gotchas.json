@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "product": "stable-build",
+  "description": "Rule catalog for the stable-build guard (scripts/guard.mjs). Rule ids are stable. Each evidence.quote is verbatim from evidence.url (compare after collapsing whitespace: the docs wrap lines). Detection logic lives in scripts/guard/rules.mjs; fixtures in test/guard/fixtures/<id>/.",
+  "suffix": "advisory: the edit was applied; silence with `stable-build-ignore <id>`",
+  "rules": [
+    {
+      "id": "usdc-native-value-6dp",
+      "title": "Native USDC value built with 6 decimals",
+      "severity": "error",
+      "appliesTo": ["js", "sol"],
+      "flags": "A transaction `value` (sendTransaction, writeContract, ethers overrides) or Solidity `msg.value` / `{value: ...}` built with 6 decimals: parseUnits(x, 6), * 10n ** 6n, 1e6.",
+      "message": "Native value (tx `value`, `msg.value`) on Arc is USDC with 18 decimals; a 6-decimal amount moves 10^12 times less than intended.",
+      "fix": "Use parseUnits(x, 18) for native value, or send 6-decimal amounts with USDC.transfer on the ERC-20 interface (0x3600…0000).",
+      "evidence": {
+        "url": "https://docs.arc.io/integrate/wallets",
+        "quote": "Native USDC uses 18 decimals (`eth_getBalance`, `address.balance`); the ERC-20 interface uses 6 decimals (`balanceOf`).",
+        "verified_at": "2026-10-04"
+      },
+      "see_also": ["https://docs.arc.io/arc/references/evm-differences"],
+      "notes": [
+        "EIP-3009 / permit typed-data messages (validAfter, validBefore, spender, deadline) use 6 decimals correctly and are not flagged.",
+        "The gas-and-fees page example sends `value: ethers.parseUnits(\"1\", 6)` labelled \"1 USDC via native send\" (https://docs.arc.io/arc/references/gas-and-fees); that contradicts the 18-decimal native interface on the wallets and EVM-differences pages. This rule follows the latter."
+      ]
+    },
+    {
+      "id": "usdc-erc20-amount-18dp",
+      "title": "USDC ERC-20 amount built with 18 decimals",
+      "severity": "error",
+      "appliesTo": ["js", "sol", "shell", "yaml"],
+      "flags": "transfer / approve / transferFrom on USDC (0x3600… address, a usdc-named contract or ABI) with parseEther, parseUnits(x, 18), 10n ** 18n, 1e18 or `cast to-wei`.",
+      "message": "The USDC ERC-20 interface (transfer, approve, transferFrom) uses 6 decimals; an 18-decimal amount asks for 10^12 times more.",
+      "fix": "Use parseUnits(x, 6) for USDC ERC-20 calls; keep 18 decimals for native value only.",
+      "evidence": {
+        "url": "https://docs.arc.io/arc/references/contract-addresses",
+        "quote": "Optional ERC-20 interface for interacting with the native USDC balance. Uses 6 decimals.",
+        "verified_at": "2026-10-04"
+      },
+      "see_also": ["https://docs.arc.io/arc/references/evm-differences"]
+    },
+    {
+      "id": "usdc-balance-summed",
+      "title": "Native and ERC-20 USDC balances added or shown twice",
+      "severity": "error",
+      "appliesTo": ["js", "sol"],
+      "flags": "getBalance / eth_getBalance / address(x).balance / msg.value added to balanceOf, or UI labels for both a native and an ERC-20 USDC balance.",
+      "message": "Native USDC (getBalance, 18 decimals) and ERC-20 USDC (balanceOf, 6 decimals) are one balance; adding them or showing two rows double-counts.",
+      "fix": "Read one view (getBalance scaled by 18 decimals, or balanceOf by 6) and show a single USDC balance row.",
+      "variants": {
+        "two-rows": {
+          "severity": "error",
+          "message": "Native USDC and ERC-20 USDC are labelled as separate balances; they are the same balance."
+        }
+      },
+      "evidence": {
+        "url": "https://docs.arc.io/integrate/wallets",
+        "quote": "Don't display native USDC and ERC-20 USDC as separate balance rows: they're the same balance.",
+        "verified_at": "2026-10-04"
+      },
+      "see_also": ["https://docs.arc.io/arc/references/connect-to-arc", "https://docs.arc.io/arc/references/evm-differences"]
+    },
+    {
+      "id": "fee-below-floor",
+      "title": "maxFeePerGas or gasPrice below 20 gwei",
+      "severity": "error",
+      "appliesTo": ["js", "shell", "yaml", "toml", "md"],
+      "flags": "A literal maxFeePerGas / gasPrice under 20 gwei: parseGwei, parseUnits(x, 'gwei'), bigint or hex wei, `--gas-price` / `--with-gas-price`, `gas_price` in TOML.",
+      "message": "maxFeePerGas/gasPrice under 20 gwei: the transaction never gets a receipt. Depending on the RPC it is rejected as `transaction underpriced` or silently dropped.",
+      "fix": "Set maxFeePerGas to at least 20 gwei; read current fees with eth_gasPrice or eth_feeHistory.",
+      "evidence": {
+        "url": "https://docs.arc.io/arc/references/evm-differences",
+        "quote": "Transactions with `maxFeePerGas` lower than 20 Gwei are silently dropped by the mempool.",
+        "verified_at": "2026-10-04"
+      },
+      "see_also": ["https://docs.arc.io/arc/references/gas-and-fees"],
+      "notes": [
+        "maxPriorityFeePerGas is not checked: the gas-and-fees page says a 0 Gwei tip is accepted.",
+        "The gas-and-fees table labels the 20 Gwei floor \"Minimum base fee (testnet)\"; the EVM-differences page states it with no network qualifier.",
+        "The outcome below the floor differs by page: evm-differences says such transactions \"are silently dropped by the mempool. They produce no error receipt\"; gas-and-fees lists the error `transaction underpriced` for maxFeePerGas below the 20 Gwei floor and says they \"may remain pending indefinitely or fail outright\" (https://docs.arc.io/arc/references/gas-and-fees, checked 2026-10-04). The message covers both."
+      ]
+    },
+    {
+      "id": "getlogs-unpaged",
+      "title": "getLogs range over 10,000 blocks, or from a fixed start block to latest",
+      "severity": "error",
+      "appliesTo": ["js", "shell", "yaml", "md"],
+      "flags": "getLogs / getContractEvents / queryFilter / eth_getLogs / cast logs from a fixed start block (0, earliest, a literal or UPPER_CASE const) to latest, or a range of more than 10,000 blocks, i.e. toBlock - fromBlock of 10,000 or more (latestBlock - 10000n to latest is 10,001 blocks; fromBlock 1_000_000n to toBlock 1_050_000n). Exactly 10,000 blocks (from + 10_000n - 1n) is accepted and not flagged.",
+      "message": "Arc's public RPC rejects eth_getLogs ranges over 10,000 blocks (-32012); a fixed start block to latest breaks as the chain grows (~2 blocks/s).",
+      "fix": "Page history in chunks of at most 9,999 blocks (step 9_999n, toBlock = fromBlock + 9_998n). Retry -32014 (that backend has not imported the block yet) after a short backoff.",
+      "variants": {
+        "span": {
+          "severity": "error",
+          "message": "Block range over 10,000 blocks (toBlock - fromBlock of 10,000 or more): Arc's public RPC rejects it with -32012."
+        }
+      },
+      "evidence": {
+        "url": "https://docs.arc.io/arc/references/rpc-endpoints",
+        "quote": "Reduce the range to ≤9,999 blocks per request and page through history sequentially",
+        "verified_at": "2026-10-04"
+      },
+      "notes": [
+        "The ERC-8004 tutorial (https://docs.arc.io/arc/tutorials/register-your-first-ai-agent) queries latestBlock - 10000n to latestBlock, which is 10,001 blocks; this rule flags that pattern.",
+        "Boundary checked live on 2026-10-04 (rpc.testnet.arc.network and rpc.testnet.arc.io): toBlock - fromBlock = 9,999 (10,000 blocks) returned a result, 10,000 (10,001 blocks) returned -32012 'requested range too large'. The rule flags only what the RPC rejects (the docs: 'exceeds 10,000 blocks'); the fix keeps the docs' 9,999-block advice.",
+        "-32014: the primary endpoint is load-balanced, and the backend serving a request may not have imported a block near the head yet (rpc-endpoints, Troubleshooting). It is not a rate limit.",
+        "Observed, not documented: a page within the block limit can still fail with -32602 'query exceeds max results N, retry with the range A-B' when it would return too many logs (N was 20,000 on both public endpoints on 2026-10-04). Split the page; the error names a sub-range that fits."
+      ]
+    },
+    {
+      "id": "transfer-filter-no-emitter",
+      "title": "Transfer log filter without the USDC system emitter",
+      "severity": "error",
+      "appliesTo": ["js"],
+      "flags": "A Transfer filter (topic 0xddf252ad…, `event Transfer(`, eventName 'Transfer', filters.Transfer) with no `address` (error), both USDC emitters (error; also through a loop or .map over a const array that holds both), only the ERC-20 USDC address 0x3600… (warn), or 0x3600… and the system emitter in separate filters of one file (warn). Addresses are judged by value when the guard can resolve them. A spread ethers filter ({ ...token.filters.Transfer(…) }) is judged by its contract.",
+      "message": "Transfer filter with no emitter address: an ERC-20 USDC transfer logs twice (0x3600… at 6 decimals, system emitter at 18), so totals double and decimals mix.",
+      "fix": "Set address to the system emitter 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE alone (18 decimals): it logs every USDC movement, ERC-20 transfers included. Do not add 0x3600….",
+      "variants": {
+        "usdc-only": {
+          "severity": "warn",
+          "message": "Filter on the ERC-20 USDC address (0x3600…) only: plain native USDC sends are missed. The system emitter logs every USDC movement, ERC-20 transfers included.",
+          "fix": "Replace 0x3600… with the system emitter 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE (18 decimals). Do not query both: each ERC-20 transfer would come back twice.",
+          "evidence": {
+            "url": "https://docs.arc.io/arc/references/usdc-system-events",
+            "quote": "The native system emitter logs a `Transfer` for every explicit USDC transfer—native sends, ERC-20 transfers, mints, and burns—at 18-decimal precision.",
+            "verified_at": "2026-10-05"
+          }
+        },
+        "both-emitters": {
+          "severity": "error",
+          "message": "Filter on both USDC emitters: each ERC-20 transfer returns two logs with different decimals (6 and 18), so totals double.",
+          "fix": "Drop 0x3600… and query only the system emitter 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE (18 decimals); it already logs every ERC-20 transfer."
+        },
+        "split-emitters": {
+          "severity": "warn",
+          "message": "Transfer filters in this file read both USDC emitters in separate queries: each ERC-20 transfer is in both results, so merging them counts it twice.",
+          "fix": "Read USDC movements from the system emitter 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE only (18 decimals). If you keep the 0x3600… query, never add its 6-decimal values to them."
+        }
+      },
+      "evidence": {
+        "url": "https://docs.arc.io/arc/references/usdc-system-events",
+        "quote": "Match on the emitter address so you do not count the same movement twice, and never mix the 6-decimal and 18-decimal values.",
+        "verified_at": "2026-10-04"
+      },
+      "see_also": ["https://docs.arc.io/integrate/exchanges/deposits"]
+    },
+    {
+      "id": "cctp-stellar-no-forwarder",
+      "title": "CCTP burn to Stellar (domain 27) without CctpForwarder",
+      "severity": "error",
+      "appliesTo": ["js", "sol"],
+      "flags": "A burn to domain 27 (destinationDomain 27 or a Stellar domain constant; depositForBurn(…, 27, …) in ethers or viem write([…]) form) whose mintRecipient or destinationCaller is not CctpForwarder, or is zero, or a file that never references CctpForwarder or its contract ids.",
+      "message": "CCTP burn to domain 27 (Stellar) without CctpForwarder: unless mintRecipient and destinationCaller are both CctpForwarder, the USDC is stuck and cannot be recovered.",
+      "fix": "Set mintRecipient and destinationCaller to CctpForwarder (mainnet CBZL2IH7…DF5T, testnet CA66Q2WF…4VSZ) and pass the recipient strkey as forwardRecipient in hook data.",
+      "variants": {
+        "zero-caller": {
+          "severity": "error",
+          "message": "Burn to Stellar with a zero destinationCaller: CctpForwarder cannot complete the transfer and the USDC is stuck."
+        },
+        "recipient-not-forwarder": {
+          "severity": "error",
+          "message": "Burn to Stellar whose mintRecipient or destinationCaller is not CctpForwarder: the USDC never reaches the recipient and cannot be recovered."
+        }
+      },
+      "facts": {
+        "stellarDomain": 27,
+        "cctpForwarder": {
+          "mainnet": "CBZL2IH7F6BIDAA3WBNXYKIXSATJGMSW7K5P5MJ6STX5RXN47TZJDF5T",
+          "testnet": "CA66Q2WFBND6V4UEB7RD4SAXSVIWMD6RA4X3U32ELVFGXV5PJK4T4VSZ",
+          "source": "https://developers.circle.com/cctp/references/stellar-contracts"
+        }
+      },
+      "evidence": {
+        "url": "https://developers.circle.com/cctp/references/stellar",
+        "quote": "On the source burn, both `mintRecipient` and `destinationCaller` must be set to the `CctpForwarder`",
+        "verified_at": "2026-10-04"
+      },
+      "see_also": ["https://developers.circle.com/cctp/references/stellar-contracts"]
+    },
+    {
+      "id": "upstream-foundry",
+      "title": "Upstream Foundry instead of Arc Foundry",
+      "severity": "warn",
+      "appliesTo": ["shell", "yaml", "md", "json"],
+      "flags": "foundryup, foundry.paradigm.xyz, foundry-rs/foundry-toolchain, bare `forge create|test|script`, `anvil`, `cast send`; and `arc-forge test|script` or `arc-anvil` with no Arc mode (no --network arc, no FOUNDRY_PROFILE whose foundry.toml profile sets network = \"arc\", no --fork-url/--rpc-url), in scripts, Makefiles, package.json, README code blocks and CI (error in CI workflows).",
+      "message": "Upstream Foundry (foundryup, forge, anvil, cast, foundry-toolchain) is not Arc-aware: local simulation runs a standard EVM, so tests can pass and still fail on Arc.",
+      "fix": "Install Arc Foundry from its releases page and use arc-forge test --network arc, arc-anvil --network arc and arc-cast send.",
+      "variants": {
+        "ci": {
+          "severity": "error",
+          "message": "CI installs or runs upstream Foundry: a green run there does not cover Arc behavior."
+        },
+        "arc-mode-off": {
+          "severity": "warn",
+          "message": "arc-forge test/script or arc-anvil without Arc mode runs Ethereum rules locally, so tests can pass and still fail on Arc.",
+          "fix": "Add --network arc, or use FOUNDRY_PROFILE=arc with [profile.arc] network = \"arc\" in foundry.toml, or fork an Arc RPC (--fork-url)."
+        },
+        "arc-mode-off-ci": {
+          "severity": "error",
+          "message": "CI runs arc-forge/arc-anvil without Arc mode, so it tests Ethereum rules: a green run there does not cover Arc behavior.",
+          "fix": "Add --network arc, or use FOUNDRY_PROFILE=arc with [profile.arc] network = \"arc\" in foundry.toml, or fork an Arc RPC (--fork-url)."
+        }
+      },
+      "evidence": {
+        "url": "https://docs.arc.io/arc/references/evm-differences",
+        "quote": "Tools that locally simulate the EVM (such as Foundry's `anvil`) run a standard EVM, not Arc's, and can't reproduce Arc-specific behavior.",
+        "verified_at": "2026-10-04"
+      },
+      "see_also": [
+        "https://docs.arc.io/arc/tutorials/install-arc-foundry",
+        "https://docs.arc.io/arc/tutorials/deploy-on-arc",
+        "https://github.com/circlefin/arc-foundry"
+      ],
+      "notes": [
+        "docs.arc.io uses the per-command flag (arc-forge test --network arc); the circlefin/arc-foundry README also documents a profile, [profile.arc] network = \"arc\" selected with FOUNDRY_PROFILE=arc (https://github.com/circlefin/arc-foundry#point-a-project-at-arc, checked 2026-10-04). Either form is accepted.",
+        "The same README shows that Arc Foundry without Arc mode runs Ethereum rules: \"arc-forge test  # Ethereum\" next to \"FOUNDRY_PROFILE=arc arc-forge test  # Arc\", and \"Forking needs no Arc-specific configuration\" because the chain ID is recognised (https://github.com/circlefin/arc-foundry#point-a-project-at-arc, checked 2026-10-04). The arc-mode-off variants rest on that README, not on docs.arc.io.",
+        "Circle's use-arc skill (circlefin/skills@58ab864) installs upstream Foundry with foundryup; where it conflicts with docs.arc.io, follow this rule."
+      ]
+    },
+    {
+      "id": "extension-from-smart-account",
+      "title": "Memo or Multicall3From called from a smart account or contract",
+      "severity": "error",
+      "appliesTo": ["js", "sol"],
+      "flags": "Memo 0x5294…e505 or Multicall3From 0x522f…47D0 in the same file as sendUserOperation, toCircleSmartAccount, toSafeSmartAccount, a bundler client or Safe; or a non-test Solidity contract calling memo / aggregate3 on them.",
+      "message": "Memo (0x5294…e505) and Multicall3From (0x522f…47D0) accept only a direct EOA caller; calls via a smart account, Safe, bundler or another contract revert.",
+      "fix": "Send Memo.memo / Multicall3From.aggregate3 as a plain EOA transaction (eth_sendTransaction); with a smart account, send the memo from an EOA or keep the metadata off-chain.",
+      "variants": {
+        "contract-caller": {
+          "severity": "error",
+          "message": "A contract calls Memo or Multicall3From: CallFrom rejects an intermediary msg.sender, so the call reverts."
+        }
+      },
+      "evidence": {
+        "url": "https://docs.arc.io/arc/concepts/transaction-memos",
+        "quote": "Smart contract wallets aren't supported as the direct caller.",
+        "verified_at": "2026-10-04"
+      },
+      "see_also": ["https://docs.arc.io/arc/concepts/batched-transactions", "https://docs.arc.io/arc/references/contract-addresses"],
+      "notes": [
+        "UNVERIFIED: behavior for EIP-7702-delegated EOAs and for wallet_sendCalls batches is not documented; the payouts starter avoids both."
+      ]
+    },
+    {
+      "id": "multicall3from-value",
+      "title": "Value forwarding through Multicall3From",
+      "severity": "error",
+      "appliesTo": ["js", "sol"],
+      "flags": "aggregate3Value or Call3Value in a file that uses Multicall3From, or a non-zero `value` on an aggregate3 call to Multicall3From.",
+      "message": "Multicall3From supports no value forwarding: there is no aggregate3Value, and CallFrom does not forward native value on Arc.",
+      "fix": "Call aggregate3 with no value and move USDC with ERC-20 transfer subcalls (6 decimals).",
+      "evidence": {
+        "url": "https://docs.arc.io/arc/concepts/batched-transactions",
+        "quote": "`aggregate3Value` because `CallFrom` does not forward value on Arc.",
+        "verified_at": "2026-10-04"
+      },
+      "see_also": ["https://docs.arc.io/arc/references/contract-addresses"]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "demo",
+  "private": true,
+  "scripts": {
+    "test:contracts": "FOUNDRY_PROFILE=arc arc-forge test"
+  }
+}

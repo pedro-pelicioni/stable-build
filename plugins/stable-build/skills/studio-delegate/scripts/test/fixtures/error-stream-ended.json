@@ -1,0 +1,19 @@
+{
+  "status": "error",
+  "appId": "app_7f3c2a91",
+  "threadId": "thr_51d0e8c4",
+  "sandboxId": "sbx_0a9b8c7d",
+  "finalText": "",
+  "todos": null,
+  "filesChanged": [],
+  "fileDiffs": [],
+  "contextFiles": [],
+  "workspaceFiles": [],
+  "deployments": [],
+  "artifacts": { "contractSources": [], "abis": [], "metadata": [] },
+  "webUrl": "https://studio.arc.io/app/${APP}",
+  "questions": null,
+  "errorMessage": "Stream ended before the turn completed. The agent may still be running — use `arc-studio attach` to check, or `--detach` for long-running work to avoid losing it on a dropped connection.",
+  "traceId": null,
+  "budget": null
+}

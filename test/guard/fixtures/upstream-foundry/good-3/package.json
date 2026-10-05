@@ -1,0 +1,8 @@
+{
+  "name": "payouts-demo",
+  "private": true,
+  "scripts": {
+    "anvil": "arc-anvil --network arc",
+    "test:contracts": "arc-forge test --network arc"
+  }
+}
