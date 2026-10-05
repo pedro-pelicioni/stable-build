@@ -146,7 +146,8 @@ describe('site: commands match the README', () => {
 
 describe('site: rule list matches data/gotchas.json', () => {
   const rows = [...HTML.matchAll(/<li><a class="rule-id"[^>]*href="([^"]+)"><code>([a-z0-9-]+)<\/code><\/a>((?:\s*<span class="sev[^"]*"[^>]*>[^<]*<\/span>)+)/g)]
-    .map((m) => ({ url: m[1], id: m[2], sev: new Set([...m[3].matchAll(/>([^<]*)</g)].flatMap((x) => x[1].match(/\b(error|warn)\b/g) || [])) }));
+    .map((m) => ({ url: m[1], id: m[2], sev: new Set([...m[3].matchAll(/>([^<]*)</g)].flatMap((x) => (x[1].match(/likely bug|check/g) || []).map((l) => (l === 'likely bug' ? 'error' : 'warn')))) }));
+  // The page shows severities as reader-friendly labels: "likely bug" = error, "check" = warn.
 
   test('same ids, same order', () => {
     assert.deepEqual(rows.map((r) => r.id), GOTCHAS.rules.map((r) => r.id));

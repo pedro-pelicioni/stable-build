@@ -637,12 +637,12 @@ h3 { font-size: 1.2rem; line-height: 1.3; letter-spacing: -0.01em; }
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
-  border: 1px solid rgba(255, 122, 107, 0.55);
+  border: 1px solid rgba(245, 184, 61, 0.45);
   border-radius: var(--radius);
   background: var(--ink);
   color: var(--paper);
 }
-.notice-mark { flex: none; margin-top: 3px; color: var(--coral); }
+.notice-mark { flex: none; margin-top: 3px; color: var(--amber); }
 .notice-text {
   font-family: var(--font-code);
   font-size: 0.85rem;
@@ -651,7 +651,7 @@ h3 { font-size: 1.2rem; line-height: 1.3; letter-spacing: -0.01em; }
 }
 .demo .notice {
   padding: 16px 18px;
-  background: linear-gradient(rgba(255, 122, 107, 0.09), rgba(255, 122, 107, 0.09)), var(--ink);
+  background: linear-gradient(rgba(245, 184, 61, 0.07), rgba(245, 184, 61, 0.07)), var(--ink);
 }
 .demo .notice-text { font-size: 0.95rem; }
 .demo .notice-mark { margin-top: 5px; }
@@ -719,7 +719,7 @@ h3 { font-size: 1.2rem; line-height: 1.3; letter-spacing: -0.01em; }
 .rule-id code { font-size: 0.9rem; }
 .rule-list p { margin-top: 4px; color: var(--text-2); font-size: 0.95rem; }
 .rule-list p code { color: var(--text); }
-/* Coral is every gotcha: error is a filled chip, warn an outlined one. */
+/* Severity chips are outlined, never alarm-red: the guard is advisory. "likely bug" in amber, "check" in muted. */
 .sev {
   display: inline-block;
   margin-left: 6px;
@@ -731,8 +731,10 @@ h3 { font-size: 1.2rem; line-height: 1.3; letter-spacing: -0.01em; }
   line-height: 1.5;
   vertical-align: 0.12em;
 }
-.sev--error { background: var(--coral); border-color: var(--coral); color: var(--ink); }
-.sev--warn { color: var(--warn-text); }
+.sev--bug { color: var(--link); }
+.sev--check { color: var(--text-2); }
+.sev-legend { margin-top: 10px; color: var(--text-2); font-size: 0.95rem; }
+.sev-legend .sev { margin-left: 2px; }
 @media (min-width: 820px) {
   .rule-list { grid-template-columns: 1fr 1fr; }
 }
