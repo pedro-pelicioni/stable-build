@@ -276,7 +276,7 @@ Environment:
       # finish card
       nothing) _T="nothing" ;;
       ver_was) _T=" %s (was %s)" ;;
-      done) _T="Done." ;;
+      fin_done) _T="Done." ;;
       fin_claude) _T="  Claude Code: %s" ;;
       fin_codex) _T="  Codex: %s" ;;
       fin_guard_on) _T="  Guard: on" ;;
@@ -541,7 +541,7 @@ Ambiente:
       # resumo final
       nothing) _T="nada" ;;
       ver_was) _T=" %s (antes: %s)" ;;
-      done) _T="Concluído." ;;
+      fin_done) _T="Concluído." ;;
       fin_claude) _T="  Claude Code: %s" ;;
       fin_codex) _T="  Codex: %s" ;;
       fin_guard_on) _T="  Guard: ligado" ;;
@@ -607,6 +607,7 @@ Ambiente:
   section() { if [ "$PHASE" = apply ]; then printf '\n'; msg "$@"; printf '\n'; fi; }
   line() { if [ "$PHASE" = plan ]; then printf '  %-8s %-38s %s\n' "$1" "$2" "$3"; fi; }
   # display form of a path: ~ for HOME (outside --prefix)
+  # shellcheck disable=SC2088 # a literal ~ for display, never expanded
   tilde() { if [ -z "$PREFIX" ] && [ -n "${HOME:-}" ]; then case "$1" in "$HOME"/*) printf '~/%s' "${1#"$HOME"/}"; return ;; esac; fi; printf '%s' "$1"; }
   now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
   usage() { msg usage "$SB_VERSION" "$GH_SLUG" "$GH_SLUG" "$CIRCLE_REPO"; }
@@ -687,7 +688,7 @@ Ambiente:
     LANG_SRC=flag
   elif [ -n "${STABLE_BUILD_LANG:-}" ]; then
     SB_LANG=$(norm_lang "$STABLE_BUILD_LANG") || { err_t err_lang_env "$STABLE_BUILD_LANG" "$STABLE_BUILD_LANG"; exit 1; }
-    LANG_SRC=env
+    LANG_SRC='env'
   fi
 
   # ------------------------------------------------------------------ arguments
@@ -1795,7 +1796,7 @@ JS_EOF
     up_cmd="curl -fsSL $RAW_INSTALL | bash -s -- --update$pfx"
     un_cmd="curl -fsSL $RAW_INSTALL | bash -s -- --uninstall$pfx"
     say ""
-    say_t done
+    say_t fin_done
     if [ "$HAS_CLAUDE" = 1 ]; then
       say_t fin_claude "$(present_list "$CP_SB" "$N_PLUGIN$(ver_label "$CP_SB_VER" "$OLD_CP_SB_VER")" "$CP_SBMCP" "$N_PLUGIN_MCP$(ver_label "$CP_SBMCP_VER" "$OLD_CP_SBMCP_VER")" "$CP_CIRCLE" "$N_C_CIRCLE (Circle)" "$CP_STUDIO" "$N_STUDIO (Circle)")"
     fi

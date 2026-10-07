@@ -263,6 +263,20 @@ describe('site: language and ids', () => {
   });
 });
 
+describe('site: Vercel config', () => {
+  // `vercel deploy` from site/ reads site/vercel.json; a Git push deploys from the repo root and
+  // reads ./vercel.json, which serves site/ as static output. Both must send the same headers.
+  test('the root vercel.json serves site/ with the same settings as site/vercel.json', () => {
+    const site = JSON.parse(readFileSync(join(SITE, 'vercel.json'), 'utf8'));
+    const root = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8'));
+    assert.equal(root.outputDirectory, 'site');
+    assert.equal(root.framework, null);
+    assert.equal(root.buildCommand, '');
+    const strip = ({ framework, buildCommand, outputDirectory, ...rest }) => rest;
+    assert.deepEqual(strip(root), site);
+  });
+});
+
 describe('site: Arc brand wording (Arc partner toolkit)', () => {
   const en = text(HTML.slice(HTML.indexOf('<body>')));
   const pt = text(Object.values(PT).join('\n'));
