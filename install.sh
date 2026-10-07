@@ -11,7 +11,8 @@
 #   curl -fsSL https://raw.githubusercontent.com/pedro-pelicioni/stable-build/main/install.sh | bash -s -- --uninstall
 #
 # Languages: English (en) and Brazilian Portuguese (pt-BR). --lang > STABLE_BUILD_LANG > the choice
-# saved in $STABLE_BUILD_HOME/config.json ("language") > a prompt in a terminal > LC_ALL/LC_MESSAGES/LANG.
+# saved in $STABLE_BUILD_HOME/config.json ("language") > a prompt in a terminal (Enter keeps English) > English.
+# The locale (LANG, LC_ALL) is never used: English is the default everywhere.
 # Every user-facing string lives in the message tables in main() (_msg_en, _msg_pt).
 #
 # All code lives inside main(). The last line calls it inside a { ...; } group, which bash does not
@@ -69,7 +70,6 @@ main() {
       lang_chosen) _T="  Language: English (en)" ;;
       lang_src_saved) _T="saved" ;;
       lang_src_prompt) _T="chosen" ;;
-      lang_src_detect) _T="detected from %s" ;;
       lang_src_default) _T="default" ;;
       col_lang) _T="lang" ;;
       st_lang_save) _T="save language %s" ;;
@@ -102,8 +102,8 @@ Usage: install.sh [options]
   --dry-run       print the plan and change nothing
   --ref=REF       git ref of %s to install (default: main, which moves only at releases)
   --lang=LANG     language of this installer and of the kit's replies: en or pt-BR. Saved for
-                  later runs; default: the saved choice, else asked in a terminal, else the locale
-                  (LC_ALL, LC_MESSAGES, LANG)
+                  later runs; default: the saved choice, else asked in a terminal (Enter keeps
+                  English), else English
   -h, --help      show this help
 
 Environment:
@@ -283,7 +283,7 @@ Environment:
       fin_guard_off) _T="  Guard: off" ;;
       fin_lang) _T="  Language: %s (change it on any run with --lang=en or --lang=pt-BR)" ;;
       fin_manifest) _T="  Manifest: %s" ;;
-      fin_next) _T="Next:\n  In a running Claude Code session run /reload-plugins; new sessions load the plugins on start.\n  Start with /stable-build:guide, or ask:\n    \"Find me an idea to build on Arc\"\n    \"Scaffold the payouts starter\"\n    \"Am I ready for Arc mainnet?\"" ;;
+      fin_next) _T="Next:\n  In a running Claude Code session run /reload-plugins; new sessions load the plugins on start.\n  Your team: Tim (architect), Bobbilee (PM), Sam (analyst), Joshua (UX designer), Pedro (developer), Mike (tech writer).\n  Start with /stable-build:guide, or ask:\n    \"Sam, what should I build on Arc?\"\n    \"Scaffold the payouts starter\"\n    \"Tim, design the architecture\"\n    \"Am I ready for Arc mainnet?\"" ;;
       fin_sandbox) _T="  Sandboxed session:\n    %s\n    %s" ;;
       fin_update) _T="  Update:    %s" ;;
       fin_uninstall) _T="  Uninstall: %s" ;;
@@ -335,7 +335,6 @@ Environment:
       lang_chosen) _T="  Idioma: português do Brasil (pt-BR)" ;;
       lang_src_saved) _T="salvo" ;;
       lang_src_prompt) _T="escolhido" ;;
-      lang_src_detect) _T="detectado a partir de %s" ;;
       lang_src_default) _T="padrão" ;;
       col_lang) _T="idioma" ;;
       st_lang_save) _T="salvar o idioma %s" ;;
@@ -368,8 +367,8 @@ Uso: install.sh [opções]
   --dry-run       mostra o plano e não altera nada
   --ref=REF       ref git de %s a instalar (padrão: main, que só avança nos releases)
   --lang=IDIOMA   idioma deste instalador e das respostas do kit: en ou pt-BR. Fica salvo para as
-                  próximas execuções; padrão: a escolha salva; senão, pergunta no terminal; senão, o
-                  locale (LC_ALL, LC_MESSAGES, LANG)
+                  próximas execuções; padrão: a escolha salva; senão, pergunta no terminal (Enter
+                  mantém o inglês); senão, inglês
   -h, --help      mostra esta ajuda
 
 Ambiente:
@@ -549,7 +548,7 @@ Ambiente:
       fin_guard_off) _T="  Guard: desligado" ;;
       fin_lang) _T="  Idioma: %s (mude em qualquer execução com --lang=en ou --lang=pt-BR)" ;;
       fin_manifest) _T="  Manifesto: %s" ;;
-      fin_next) _T="Próximos passos:\n  Em uma sessão do Claude Code já aberta, rode /reload-plugins; sessões novas carregam os plugins ao iniciar.\n  Comece com /stable-build:guide, ou peça:\n    \"Me ajude a achar uma ideia para construir na Arc\"\n    \"Crie o projeto inicial de payouts\"\n    \"Estou pronto para a mainnet da Arc?\"" ;;
+      fin_next) _T="Próximos passos:\n  Em uma sessão do Claude Code já aberta, rode /reload-plugins; sessões novas carregam os plugins ao iniciar.\n  Seu time: Tim (arquiteto), Bobbilee (PM), Sam (analista), Joshua (UX designer), Pedro (desenvolvedor), Mike (tech writer).\n  Comece com /stable-build:guide, ou peça:\n    \"Sam, o que eu construo na Arc?\"\n    \"Crie o projeto inicial de payouts\"\n    \"Tim, desenhe a arquitetura\"\n    \"Estou pronto para a mainnet da Arc?\"" ;;
       fin_sandbox) _T="  Sessão no sandbox:\n    %s\n    %s" ;;
       fin_update) _T="  Atualizar:   %s" ;;
       fin_uninstall) _T="  Desinstalar: %s" ;;
@@ -628,19 +627,9 @@ Ambiente:
       *) return 1 ;;
     esac
   }
-  # LC_ALL, then LC_MESSAGES, then LANG: the first one set decides; "pt..." means pt-BR
-  DETECTED_LANG=en; DETECT_VAR=''
-  detect_lang() {
-    local n v
-    for n in LC_ALL LC_MESSAGES LANG; do
-      eval "v=\${$n:-}"
-      if [ -n "$v" ]; then
-        DETECT_VAR=$n
-        case "$v" in pt*|PT*) DETECTED_LANG=pt-BR ;; *) DETECTED_LANG=en ;; esac
-        return 0
-      fi
-    done
-  }
+  # English is the default everywhere. Portuguese only when asked for: --lang, STABLE_BUILD_LANG,
+  # the saved choice or the prompt. The locale (LANG, LC_ALL, LC_MESSAGES) is never read.
+  DEFAULT_LANG=en
   # the language saved in <state dir>/config.json (else manifest.json), without needing node; the
   # JSON escapes \t \n \r \f become spaces, which norm_lang trims, as JSON.parse + prefs.mjs would
   read_saved_lang() {
@@ -654,8 +643,7 @@ Ambiente:
   }
   # the first prompt: a one-line banner, then a bilingual menu on the terminal
   choose_lang() {
-    local def=$DETECTED_LANG defnum=1 ans tries=0 v
-    if [ "$def" = pt-BR ]; then defnum=2; fi
+    local def=$DEFAULT_LANG defnum=1 ans tries=0 v
     say_t lang_banner "$SB_VERSION"
     while :; do
       msg lang_menu "$defnum" >/dev/tty
@@ -679,12 +667,11 @@ Ambiente:
       env) printf '%s' STABLE_BUILD_LANG ;;
       saved) msg lang_src_saved ;;
       prompt) msg lang_src_prompt ;;
-      *) if [ -n "$DETECT_VAR" ]; then msg lang_src_detect "$DETECT_VAR"; else msg lang_src_default; fi ;;
+      *) msg lang_src_default ;;
     esac
   }
 
-  detect_lang
-  SB_LANG=$DETECTED_LANG
+  SB_LANG=$DEFAULT_LANG
   # --lang is read before the other arguments, so even their errors use it
   LANG_ARG=''; HAVE_LANG_ARG=0; LANG_SRC=''; _want=0
   for _a in "$@"; do
@@ -791,11 +778,11 @@ Ambiente:
   # In an agent session the terminal belongs to the agent's UI, so nobody can answer a prompt here.
   if [ "$AGENT_SESSION" = 1 ] && [ "$YES" != 1 ]; then HAVE_TTY=0; fi
 
-  # Language, last step: ask in a terminal (the first prompt, before any other output); otherwise
-  # (no terminal, or --yes) the locale decides without asking.
+  # Language, last step: ask in a terminal (the first prompt, before any other output; Enter keeps
+  # English); otherwise (no terminal, or --yes) English, without asking.
   if [ -z "$LANG_SRC" ]; then
     if [ "$HAVE_TTY" = 1 ] && [ "$YES" != 1 ]; then choose_lang
-    else SB_LANG=$DETECTED_LANG; LANG_SRC=detect; fi
+    else SB_LANG=$DEFAULT_LANG; LANG_SRC=default; fi
   fi
 
   SB_WORK=$(mktemp -d "${TMPDIR:-/tmp}/stable-build.XXXXXX") || die_t err_mktemp

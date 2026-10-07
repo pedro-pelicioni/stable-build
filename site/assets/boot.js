@@ -1,11 +1,23 @@
 // stable-build landing page: runs in <head> before the first paint (not deferred).
-// Picks the starting language: ?lang=, then the saved choice, then the browser's first language.
+// Marks <html> for motion, then picks the starting language: ?lang=, then the visitor's saved choice
+// (from pressing EN or PT), else English. The browser language is never used: English is the default.
 // For Portuguese it marks <html>, starts loading assets/pt.js right away and holds the translated
 // parts of the page back (class i18n-pending, see style.css) until main.js has swapped the copy in,
 // so English never paints first and then jumps. A 1-second failsafe shows the page regardless.
 (function () {
   "use strict";
   var root = document.documentElement;
+
+  // Motion (hero terminal, scroll reveal) starts hidden, so mark it before the first paint. If
+  // main.js has not taken over after 2.5 seconds, drop the class and show everything as is.
+  var reduce = false;
+  try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { /* old browser */ }
+  if (!reduce) {
+    root.classList.add("motion");
+    window.setTimeout(function () {
+      if (!root.classList.contains("motion-ready")) root.classList.remove("motion");
+    }, 2500);
+  }
 
   function normalize(value) {
     if (!value) return null;
@@ -20,10 +32,7 @@
   if (!lang) {
     try { lang = normalize(window.localStorage.getItem("stable-build-lang")); } catch (e) { /* storage blocked */ }
   }
-  if (!lang) {
-    var prefs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || "en"];
-    lang = /^pt\b/i.test(prefs[0] || "") ? "pt" : "en";
-  }
+  if (!lang) lang = "en";
   window.SB_START_LANG = lang;
   if (lang !== "pt") return;
 

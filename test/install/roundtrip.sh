@@ -9,8 +9,8 @@
 #       Claude-only host with 0 Circle skills; dry runs; bad flags; root refusal; truncated
 #       downloads; uninstall keeps foreign files in STABLE_BUILD_HOME; CDPATH; quoted one-liners.
 #       Languages (L*): a pt-BR lifecycle whose saved choice is reused by --update and --uninstall;
-#       --lang (both forms, every alias), STABLE_BUILD_LANG, LC_ALL/LC_MESSAGES/LANG detection and
-#       their precedence; invalid values exit 1; a config.json created only for the language is
+#       --lang (both forms, every alias), STABLE_BUILD_LANG, English by default (the locale is
+#       never read) and their precedence; invalid values exit 1; a config.json created only for the language is
 #       removed on uninstall; an invalid config.json; no --prefix. TTY: the language prompt on a
 #       pseudo-terminal (tty-drive.py, needs python3): choosing 2 makes the rest Portuguese.
 #
@@ -396,9 +396,9 @@ check "manifest: Circle skills, version, repo" mf_true "$M1" "m.circle.skills.jo
 if [ -n "$CIRCLE_SHA" ]; then check "manifest: Circle SHA from the marketplace checkout" mf_true "$M1" "m.circle.sha === '$CIRCLE_SHA'"; fi
 check "manifest: ref main, prefix, guard on, versions" mf_true "$M1" "m.ref === 'main' && m.prefix === '$P1' && m.guard.enabled === true && m.hosts.claude.plugins['stable-build-mcp@stable-build'].version === '0.1.0' && m.files['config.json'].createdByUs === true && m.hosts.claude.cli === '2.1.280' && m.schemaVersion === 1"
 check "guard consent written (matches run.sh's grep)" grep -q '"guard": *true' "$P1/.stable-build/config.json"
-check "language saved next to the consent (LANG=C: en, detected)" cfg_true "$P1/.stable-build/config.json" "c.language === 'en' && c.guard === true"
+check "language saved next to the consent (en, the default)" cfg_true "$P1/.stable-build/config.json" "c.language === 'en' && c.guard === true"
 check "manifest: language en" mf_true "$M1" "m.language === 'en'"
-check "header names the language and where it came from" out_has "  language: en (detected from LANG)"
+check "header names the language and where it came from" out_has "  language: en (default)"
 check "the English-word detector used on pt-BR runs finds English here" has_english
 show_out_on_fail "$F0"
 
@@ -772,7 +772,7 @@ check "no residue" no_residue "$PL"
 show_out_on_fail "$F0"
 
 # ================================================================ L2: where the language comes from
-section "L2 --lang (both forms, aliases), STABLE_BUILD_LANG, LC_ALL/LC_MESSAGES/LANG and precedence (dry runs)"
+section "L2 --lang (both forms, aliases), STABLE_BUILD_LANG, English by default, precedence (dry runs)"
 LD="$WORK/l2-not-created"
 # $1 extra env, $2 expected header line, rest: installer arguments (after --prefix=LD --dry-run)
 lang_hdr() {
@@ -791,19 +791,20 @@ check "--lang en before other flags" lang_hdr "LANG=pt_BR.UTF-8" "  language: en
 check "STABLE_BUILD_LANG=pt_BR" lang_hdr "STABLE_BUILD_LANG=pt_BR" "  idioma: pt-BR (STABLE_BUILD_LANG)"
 check "STABLE_BUILD_LANG=english beats a pt locale" lang_hdr "STABLE_BUILD_LANG=english LANG=pt_BR.UTF-8" "  language: en (STABLE_BUILD_LANG)"
 check "--lang beats STABLE_BUILD_LANG" lang_hdr "STABLE_BUILD_LANG=pt-BR" "  language: en (--lang)" --lang=en
-check "LANG=pt_BR.UTF-8 with no terminal: detected, no prompt" lang_hdr "LANG=pt_BR.UTF-8" "  idioma: pt-BR (detectado a partir de LANG)"
-check "the dry-run plan is in Portuguese too" out_has "Simulação: nada foi alterado."
-check "--yes with LANG=pt_BR.UTF-8: detected, no prompt" lang_hdr "LANG=pt_BR.UTF-8" "  idioma: pt-BR (detectado a partir de LANG)" --yes
-check "LC_ALL beats LANG" lang_hdr "LC_ALL=C LANG=pt_BR.UTF-8" "  language: en (detected from LC_ALL)"
-check "LC_MESSAGES beats LANG" lang_hdr "LC_MESSAGES=pt_BR.UTF-8 LANG=en_US.UTF-8" "  idioma: pt-BR (detectado a partir de LC_MESSAGES)"
-check "LC_ALL beats LC_MESSAGES" lang_hdr "LC_ALL=pt_BR.UTF-8 LC_MESSAGES=en_US.UTF-8" "  idioma: pt-BR (detectado a partir de LC_ALL)"
-check "pt_PT counts as Portuguese" lang_hdr "LANG=pt_PT.UTF-8" "  idioma: pt-BR (detectado a partir de LANG)"
+check "STABLE_BUILD_LANG=pt-BR: the dry-run plan is in Portuguese too" lang_hdr "STABLE_BUILD_LANG=pt-BR" "  idioma: pt-BR (STABLE_BUILD_LANG)"
+check "the dry-run plan is in Portuguese" out_has "Simulação: nada foi alterado."
+# English is the default everywhere: a Portuguese locale never switches the installer
+check "LANG=pt_BR.UTF-8 with no terminal: English, no prompt" lang_hdr "LANG=pt_BR.UTF-8" "  language: en (default)"
+check "--yes with LANG=pt_BR.UTF-8: English, no prompt" lang_hdr "LANG=pt_BR.UTF-8" "  language: en (default)" --yes
+check "LC_ALL=pt_BR.UTF-8: English" lang_hdr "LC_ALL=pt_BR.UTF-8" "  language: en (default)"
+check "LC_MESSAGES=pt_BR.UTF-8: English" lang_hdr "LC_MESSAGES=pt_BR.UTF-8 LANG=pt_BR.UTF-8" "  language: en (default)"
+check "pt_PT locale: English" lang_hdr "LANG=pt_PT.UTF-8" "  language: en (default)"
 check "no locale variable set: English" lang_hdr "LANG=" "  language: en (default)"
-check "agent session (CLAUDECODE=1) with a pt locale: detected, no prompt" lang_hdr "CLAUDECODE=1 LANG=pt_BR.UTF-8" "  idioma: pt-BR (detectado a partir de LANG)"
+check "agent session (CLAUDECODE=1) with a pt locale: English, no prompt" lang_hdr "CLAUDECODE=1 LANG=pt_BR.UTF-8" "  language: en (default)"
 if (exec </dev/tty) 2>/dev/null; then
   echo "  skip  this shell has a terminal, so a run without STABLE_BUILD_NO_TTY would prompt"
 else
-  check "no terminal at all (STABLE_BUILD_NO_TTY unset): detected, no prompt" lang_hdr "STABLE_BUILD_NO_TTY= LANG=pt_BR.UTF-8" "  idioma: pt-BR (detectado a partir de LANG)"
+  check "no terminal at all (STABLE_BUILD_NO_TTY unset): English, no prompt" lang_hdr "STABLE_BUILD_NO_TTY= LANG=pt_BR.UTF-8" "  language: en (default)"
 fi
 
 # ================================================================ L3: invalid values
@@ -829,7 +830,7 @@ check "an invalid --lang is not rescued by a valid STABLE_BUILD_LANG" lang_rejec
 section "L4 config.json created only for the language (no guard): gate closed, --lang changes it, uninstall removes it"
 PG="$WORK/pg"; seed_prefix "$PG"; HG="$WORK/hg"; CG="$PG/.stable-build/config.json"; MG="$PG/.stable-build/manifest.json"
 F0=$FAILS
-run_inst "$HG" "$STUB_PATH" "LANG=pt_BR.UTF-8" --prefix="$PG" --yes --no-circle --no-studio --no-mcp --no-hooks
+run_inst "$HG" "$STUB_PATH" "STABLE_BUILD_LANG=pt-BR" --prefix="$PG" --yes --no-circle --no-studio --no-mcp --no-hooks
 check "install exits 0" test "$RC" = 0
 check "config.json holds only the language" cfg_true "$CG" "keys === 'language,schemaVersion' && c.language === 'pt-BR' && c.schemaVersion === 1"
 check "the hooks' consent gate stays closed" gate_closed "$CG"
@@ -934,7 +935,7 @@ TTY_ARGS="--prefix=$PT1 $QUIET"
 run_tty "$WORK/ht1" "" --expect "Language / Idioma:" --send 2 --expect "Ligar o guard? [s/N]" --send s
 check "choosing 2, then answering s: exits 0" test "$RC" = 0
 check "the language prompt is the first thing shown" test "$(head -n 1 "$OUT")" = "stable-build $VER: installer / instalador"
-check "the menu, defaulting to English under LANG=C" test "$(sed -n 2p "$OUT")" = "Language / Idioma: [1] English  [2] Português (Brasil)  (Enter = 1): 2"
+check "the menu, defaulting to English" test "$(sed -n 2p "$OUT")" = "Language / Idioma: [1] English  [2] Português (Brasil)  (Enter = 1): 2"
 check "the choice is confirmed in Portuguese" test "$(sed -n 3p "$OUT")" = "  Idioma: português do Brasil (pt-BR)"
 check "header: pt-BR (escolhido)" out_has "  idioma: pt-BR (escolhido)"
 for s in "Plano:" "Plugin stable-build" "Guard de edição" "  Guard ligado: gravado em" "Concluído." "Próximos passos:"; do
@@ -964,11 +965,11 @@ show_out_on_fail "$F0"
 PT2="$WORK/pt2"; mkdir -p "$PT2"
 F0=$FAILS
 TTY_ARGS="--prefix=$PT2 $QUIET"
-run_tty "$WORK/ht2" "LANG=pt_BR.UTF-8" --expect "(Enter = 2): " --send '' --expect "Ligar o guard? [s/N]" --send n
-check "LANG=pt_BR.UTF-8: Enter keeps the detected Portuguese" test "$RC" = 0
-check "confirmed" out_has "  Idioma: português do Brasil (pt-BR)"
-check "a 'no' at the terminal is recorded" out_has "  O guard continua desligado. As próximas execuções não perguntam de novo"
-check "manifest: declined, language pt-BR" mf_true "$PT2/.stable-build/manifest.json" "typeof m.guard.declinedAt === 'string' && m.language === 'pt-BR'"
+run_tty "$WORK/ht2" "LANG=pt_BR.UTF-8" --expect "(Enter = 1): " --send '' --expect "Turn the guard on? [y/N]" --send n
+check "LANG=pt_BR.UTF-8: the menu still defaults to English, and Enter keeps it" test "$RC" = 0
+check "confirmed" out_has "  Language: English (en)"
+check "a 'no' at the terminal is recorded" out_has "  Guard stays off. Later runs do not ask again"
+check "manifest: declined, language en" mf_true "$PT2/.stable-build/manifest.json" "typeof m.guard.declinedAt === 'string' && m.language === 'en'"
 check "config.json: the language only" cfg_true "$PT2/.stable-build/config.json" "keys === 'language,schemaVersion'"
 show_out_on_fail "$F0"
 
@@ -988,7 +989,7 @@ PT4="$WORK/pt4-not-created"
 TTY_ARGS="--prefix=$PT4 --dry-run --yes"
 run_tty "$WORK/ht4" "LANG=pt_BR.UTF-8"
 check "--yes in a terminal: no language prompt" out_lacks "Language / Idioma"
-check "--yes in a terminal: the locale decides" out_has "  idioma: pt-BR (detectado a partir de LANG)"
+check "--yes in a terminal with a pt locale: English" out_has "  language: en (default)"
 TTY_ARGS="--prefix=$PT4 --dry-run --lang=en"
 run_tty "$WORK/ht4" "LANG=pt_BR.UTF-8"
 check "--lang in a terminal: no prompt" out_lacks "Language / Idioma"
@@ -999,7 +1000,7 @@ check "STABLE_BUILD_LANG in a terminal: no prompt" out_lacks "Language / Idioma"
 check "STABLE_BUILD_LANG in a terminal: used" out_has "  idioma: pt-BR (STABLE_BUILD_LANG)"
 run_tty "$WORK/ht4" "CLAUDECODE=1 LANG=pt_BR.UTF-8"
 check "agent session in a terminal: no prompt" out_lacks "Language / Idioma"
-check "agent session in a terminal: the locale decides" out_has "  idioma: pt-BR (detectado a partir de LANG)"
+check "agent session in a terminal with a pt locale: English" out_has "  language: en (default)"
 check "these dry runs create nothing" test ! -e "$PT4"
 else
   echo "  skip  python3 with pty is not available: the terminal prompt is not tested"

@@ -362,23 +362,22 @@ describe("runs (help and language errors only)", () => {
   const PT_HELP = /^instalador stable-build .*\n[\s\S]*Uso: install\.sh \[opções\]/;
   const EN_HELP = /^stable-build installer .*\n[\s\S]*Usage: install\.sh \[options\]/;
 
-  test("--help is English by default and Portuguese with --lang, STABLE_BUILD_LANG or a pt locale", () => {
-    const en = run(["--help"], { LANG: "C" });
-    assert.equal(en.status, 0);
-    assert.match(en.stdout, /^stable-build installer .*\n[\s\S]*Usage: install\.sh \[options\]/);
+  test("--help is English by default, even with a pt locale, and Portuguese only with --lang or STABLE_BUILD_LANG", () => {
+    for (const env of [{ LANG: "C" }, {}, { LANG: "pt_BR.UTF-8" }, { LC_ALL: "pt_BR.UTF-8", LANG: "en_US.UTF-8" }, { LC_MESSAGES: "pt_BR.UTF-8" }]) {
+      const en = run(["--help"], env);
+      assert.equal(en.status, 0, JSON.stringify(env));
+      assert.match(en.stdout, EN_HELP, `the locale switched --help: ${JSON.stringify(env)}`);
+    }
     for (const [args, env] of [
       [["--lang=pt-BR", "--help"], { LANG: "C" }],
       [["--help", "--lang", "pt"], {}],
       [["--help"], { STABLE_BUILD_LANG: "Português" }],
-      [["--help"], { LANG: "pt_BR.UTF-8" }],
-      [["--help"], { LC_ALL: "pt_BR.UTF-8", LANG: "en_US.UTF-8" }],
     ]) {
       const r = run(args, env);
       assert.equal(r.status, 0, `${args} ${JSON.stringify(env)}`);
-      assert.match(r.stdout, /^instalador stable-build .*\n[\s\S]*Uso: install\.sh \[opções\]/, `${args} ${JSON.stringify(env)}`);
+      assert.match(r.stdout, PT_HELP, `${args} ${JSON.stringify(env)}`);
     }
-    // LC_ALL wins over LANG; --lang wins over STABLE_BUILD_LANG and the locale
-    assert.match(run(["--help"], { LC_ALL: "C", LANG: "pt_BR.UTF-8" }).stdout, /Usage: install\.sh/);
+    // --lang wins over STABLE_BUILD_LANG
     assert.match(run(["--help", "--lang=en"], { STABLE_BUILD_LANG: "pt-BR", LANG: "pt_BR.UTF-8" }).stdout, /Usage: install\.sh/);
   });
 

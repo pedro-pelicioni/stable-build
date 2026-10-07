@@ -89,7 +89,7 @@ Run it on `.`, `plugins/stable-build` and `plugins/stable-build-mcp`.
 
 ## Languages (en, pt-BR)
 
-The kit speaks English and Brazilian Portuguese. The choice is `"language": "en" | "pt-BR"` in `$STABLE_BUILD_HOME/config.json`, written by `install.sh` (`--lang` > `STABLE_BUILD_LANG` > the saved value > the prompt or `LC_ALL`/`LC_MESSAGES`/`LANG`). The manifest records `language`, and `files["config.json"].createdByUs` or `languageAddedByUs`, so `--uninstall` removes only what the installer wrote. A `config.json` that holds only the language is not consent: `run.sh` starts the hooks only on `"guard": true`. Accepted spellings live in `norm_lang` (`install.sh`) and `ALIASES` (`plugins/stable-build/scripts/guard/prefs.mjs`); change both together.
+The kit speaks English and Brazilian Portuguese. The choice is `"language": "en" | "pt-BR"` in `$STABLE_BUILD_HOME/config.json`, written by `install.sh` (`--lang` > `STABLE_BUILD_LANG` > the saved value > the prompt, where Enter keeps English > English). English is the default everywhere, on the landing page too: never pick Portuguese from the locale or the browser language. The manifest records `language`, and `files["config.json"].createdByUs` or `languageAddedByUs`, so `--uninstall` removes only what the installer wrote. A `config.json` that holds only the language is not consent: `run.sh` starts the hooks only on `"guard": true`. Accepted spellings live in `norm_lang` (`install.sh`) and `ALIASES` (`plugins/stable-build/scripts/guard/prefs.mjs`); change both together.
 
 ### Installer messages
 

@@ -109,16 +109,18 @@ describe('check-docs-sync: the repo', () => {
     }
   });
 
-  test('both READMEs document --lang and STABLE_BUILD_LANG in a Language section', () => {
-    for (const [file, heading] of [['README.md', 'Language'], ['README.pt-BR.md', 'Idioma']]) {
+  test('both READMEs document --lang, STABLE_BUILD_LANG and English as the default in a Language section', () => {
+    for (const [file, heading, englishDefault] of [['README.md', 'Language', 'English is the default everywhere'], ['README.pt-BR.md', 'Idioma', 'O inglês é o padrão em tudo']]) {
       const text = readFileSync(join(ROOT, file), 'utf8');
       const md = parseMarkdown(text);
       const h = md.headings.find((x) => x.text === heading);
       assert.ok(h, `${file} has a "${heading}" heading`);
       const next = md.headings.find((x) => x.line > h.line);
       const section = text.split('\n').slice(h.line, next ? next.line - 1 : undefined).join('\n');
-      for (const needle of ['--lang=pt-BR', 'STABLE_BUILD_LANG', 'LC_ALL', 'LC_MESSAGES', 'LANG', '"language"', 'config.json'])
+      for (const needle of ['--lang=pt-BR', 'STABLE_BUILD_LANG', englishDefault, '"language"', 'config.json'])
         assert.ok(section.includes(needle), `${file} ${heading} section mentions ${needle}`);
+      // the locale no longer picks the language, so the docs must not say it does
+      assert.ok(!section.includes('LC_MESSAGES'), `${file} ${heading} section still describes locale detection`);
     }
   });
 });

@@ -1,6 +1,6 @@
 ---
 name: guide
-description: "Start here for stable-build: what this kit does for apps built on Arc and which skill to use next. Use when the user asks for help, next steps, or which stable-build skill fits."
+description: "Start here for stable-build: what this kit does for apps built on Arc and which skill to use next. Use when the user asks for help, next steps, which stable-build skill fits, or who is on the stable-build team."
 ---
 
 # guide
@@ -74,6 +74,19 @@ Show the result as one table (check, status, fix). Fixes are commands for the us
 If the request already shows the stage, skip the question. Otherwise ask once: idea, scaffold, plan, build, check, or ship?
 
 The main path is find-idea → new-app → pm, architect, dev → gotchas → go-live.
+
+The role skills have first names. When the user names one ("talk to Tim", "Sam, what should I build?"), run that skill:
+
+| Name | Skill | Role |
+|---|---|---|
+| Tim | `architect` | Architect; leads the plan |
+| Bobbilee | `pm` | Product manager |
+| Sam | `analyst` | Analyst |
+| Joshua | `ux-designer` | UX designer |
+| Pedro | `dev` | Developer |
+| Mike | `tech-writer` | Tech writer |
+
+The names are a tribute to people from the Arc community. The agents never claim to be them or speak for them or for Circle.
 
 | Stage | Skill | Then |
 |---|---|---|

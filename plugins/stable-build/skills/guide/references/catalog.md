@@ -12,7 +12,7 @@ Circle's skills (for example `use-usdc` or `bridge-stablecoin`) come from Circle
 
 | Skill | Use it when |
 |---|---|
-| `guide` | Start here for stable-build: what this kit does for apps built on Arc and which skill to use next. Use when the user asks for help, next steps, or which stable-build skill fits. |
+| `guide` | Start here for stable-build: what this kit does for apps built on Arc and which skill to use next. Use when the user asks for help, next steps, which stable-build skill fits, or who is on the stable-build team. |
 
 ## Builder journey
 
@@ -28,12 +28,12 @@ Circle's skills (for example `use-usdc` or `bridge-stablecoin`) come from Circle
 
 | Skill | Use it when |
 |---|---|
-| `analyst` | Business analyst for apps built on Arc - brainstorming, quick market and technical research, and idea hunting through find-idea, grounded in Arc's Request for Builders. Use when the user asks for the stable-build analyst, or wants to brainstorm, research a market or find what to build on Arc. |
-| `pm` | Product manager for apps built on Arc - PRD discovery and docs/plan/prd.md with an Onchain section (network plan, assets, EOA vs smart account, blocklist, fees in USDC), then epics, stories and a readiness check. Use when the user asks for the stable-build PM, or wants to write, update or validate the PRD of an app built on Arc. |
-| `ux-designer` | UX designer for apps built on Arc - DESIGN.md and EXPERIENCE.md with Arc states built in (one USDC balance, fees in USDC, pending then final after one confirmation, dropped and reverted transactions, testnet banner). Use when the user asks for the stable-build UX designer, or wants UX specs, screens or flows for an app built on Arc. |
-| `architect` | System architect for apps built on Arc - turns the PRD and UX into a short architecture spine that starts from Arc's protocol invariants, and checks whether the plan is ready to build. Use when the user asks for the stable-build architect, or wants architecture or technical design decisions for an app built on Arc. |
-| `dev` | Developer for apps built on Arc - implements stories from docs/stories/ red-green-refactor, with contract tests on Arc Foundry in Arc mode (arc-forge test --network arc, arc-anvil --network arc), never plain anvil. A story is done only with passing tests and a testnet tx hash. Use in a project built on Arc (.stable-build/project.json or Arc markers) when the user asks for the stable-build developer or to implement a story from docs/stories/. |
-| `tech-writer` | Technical writer for apps built on Arc - writes and validates docs, explainers and Mermaid diagrams, applying the brand rule, no yield language, and a docs.arc.io source for every Arc fact. Use when the user asks for the stable-build tech writer, or wants documentation, a diagram or an explainer for an app built on Arc or an Arc concept. |
+| `analyst` | Business analyst for apps built on Arc - brainstorming, quick market and technical research, and idea hunting through find-idea, grounded in Arc's Request for Builders. Use when the user asks for Sam or the stable-build analyst ("talk to Sam"), or wants to brainstorm, research a market or find what to build on Arc. |
+| `pm` | Product manager for apps built on Arc - PRD discovery and docs/plan/prd.md with an Onchain section (network plan, assets, EOA vs smart account, blocklist, fees in USDC), then epics, stories and a readiness check. Use when the user asks for Bobbilee or the stable-build PM ("talk to Bobbilee"), or wants to write, update or validate the PRD of an app built on Arc. |
+| `ux-designer` | UX designer for apps built on Arc - DESIGN.md and EXPERIENCE.md with Arc states built in (one USDC balance, fees in USDC, pending then final after one confirmation, dropped and reverted transactions, testnet banner). Use when the user asks for Joshua or the stable-build UX designer ("talk to Joshua"), or wants UX specs, screens or flows for an app built on Arc. |
+| `architect` | System architect for apps built on Arc - turns the PRD and UX into a short architecture spine that starts from Arc's protocol invariants, and checks whether the plan is ready to build. Use when the user asks for Tim or the stable-build architect ("talk to Tim"), or wants architecture or technical design decisions for an app built on Arc. |
+| `dev` | Developer for apps built on Arc - implements stories from docs/stories/ red-green-refactor, with contract tests on Arc Foundry in Arc mode (arc-forge test --network arc, arc-anvil --network arc), never plain anvil. A story is done only with passing tests and a testnet tx hash. Use in a project built on Arc (.stable-build/project.json or Arc markers) when the user asks for Pedro or the stable-build developer ("talk to Pedro") or to implement a story from docs/stories/. |
+| `tech-writer` | Technical writer for apps built on Arc - writes and validates docs, explainers and Mermaid diagrams, applying the brand rule, no yield language, and a docs.arc.io source for every Arc fact. Use when the user asks for Mike or the stable-build tech writer ("talk to Mike"), or wants documentation, a diagram or an explainer for an app built on Arc or an Arc concept. |
 
 ## Shared workflows
 

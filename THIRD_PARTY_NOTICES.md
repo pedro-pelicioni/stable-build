@@ -35,7 +35,7 @@ The skills below are adapted from BMad Method:
 
 **Changes made by stable-build contributors:**
 
-- Persona names are replaced by role names, and the `bmad-` prefix is removed from every skill name.
+- BMad's persona names are removed and each role gets a stable-build first name instead (a tribute to people from the Arc community; see the README). The `bmad-` prefix is removed from every skill name.
 - The `_bmad/scripts` runtime is removed. That covers `uv run`, `resolve_customization.py`, `resolve_config.py`, `memlog.py` and `customize.toml` merging. Skills read plain files relative to their own folder.
 - Menus, activation steps and workflows are condensed. Menu items route to stable-build skills such as `find-idea`, `gotchas` and `go-live`.
 - Outputs are written to `docs/plan/` and `docs/stories/` in the user's project, not to `_bmad-output/`.

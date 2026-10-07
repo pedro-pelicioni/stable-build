@@ -1,4 +1,5 @@
-// stable-build landing page: EN/PT toggle, copy buttons and code-panel focus. No dependencies.
+// stable-build landing page: EN/PT toggle, copy buttons, code-panel focus, the hero terminal, the
+// scroll reveal and the card spotlight. No dependencies.
 // assets/boot.js runs first (in <head>) and sets window.SB_START_LANG; for Portuguese it has already
 // started loading assets/pt.js. English visitors never download pt.js unless they press PT.
 (function () {
@@ -49,8 +50,7 @@
     if (fromUrl) return fromUrl;
     var saved = normalize(readStored());
     if (saved) return saved;
-    var prefs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || "en"];
-    return /^pt\b/i.test(prefs[0] || "") ? "pt" : "en";
+    return "en";
   }
 
   // Loads the Portuguese dictionary once; done(ok) runs when window.SB_PT is ready or loading failed.
@@ -111,6 +111,7 @@
     }
     var copies = document.querySelectorAll(".copy");
     for (var n = 0; n < copies.length; n++) resetCopy(copies[n]);
+    if (typeof onLangApplied === "function") onLangApplied();
   }
 
   function reveal() { root.classList.remove("i18n-pending"); }
@@ -218,6 +219,93 @@
     resizeTimer = window.setTimeout(syncPanels, 150);
   });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncPanels);
+
+  // ---- Motion: hero terminal, scroll reveal, card spotlight ----
+  // boot.js adds .motion to <html> unless the visitor prefers reduced motion; without it every line
+  // and card is simply shown. "motion-ready" tells boot.js's failsafe that this script is running.
+
+  var motion = root.classList.contains("motion");
+  root.classList.add("motion-ready");
+
+  var term = document.getElementById("term");
+  var termLines = term ? term.querySelectorAll(".t-line") : [];
+  var termTimers = [];
+  var termStarted = false;
+  var TYPE_MS = 34;
+
+  function clearTerm() {
+    for (var i = 0; i < termTimers.length; i++) window.clearTimeout(termTimers[i]);
+    termTimers = [];
+    for (var j = 0; j < termLines.length; j++) termLines[j].classList.remove("on", "is-current");
+  }
+
+  function at(ms, fn) { termTimers.push(window.setTimeout(fn, ms)); }
+
+  function showLine(i) {
+    return function () {
+      if (i > 0) termLines[i - 1].classList.remove("is-current");
+      termLines[i].classList.add("on", "is-current");
+    };
+  }
+
+  function runTerm() {
+    clearTerm();
+    var t = 300;
+    for (var i = 0; i < termLines.length; i++) {
+      var line = termLines[i];
+      var typed = line.querySelector(".t-type");
+      if (typed) {
+        var n = Math.max(1, typed.textContent.length);
+        typed.style.setProperty("--n", String(n));
+        at(t, showLine(i));
+        t += n * TYPE_MS + 520;
+      } else {
+        at(t, showLine(i));
+        t += line.classList.contains("t-warn") ? 1300 : 650;
+      }
+    }
+    at(t + 6500, runTerm);
+  }
+
+  function startTerm() {
+    if (termStarted || !motion || !termLines.length) return;
+    termStarted = true;
+    runTerm();
+  }
+
+  function onLangApplied() { if (termStarted) runTerm(); }
+
+  if (motion && "IntersectionObserver" in window) {
+    var revealer = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        var e = entries[i];
+        if (!e.isIntersecting) continue;
+        e.target.classList.add("is-in");
+        revealer.unobserve(e.target);
+        if (e.target === term) startTerm();
+      }
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
+    var items = document.querySelectorAll("[data-reveal]");
+    for (var r = 0; r < items.length; r++) {
+      var el = items[r];
+      var sibs = el.parentNode ? el.parentNode.querySelectorAll(":scope > [data-reveal]") : [];
+      var idx = Array.prototype.indexOf.call(sibs, el);
+      if (idx > 0) el.style.transitionDelay = Math.min(idx, 6) * 70 + "ms";
+      revealer.observe(el);
+    }
+  } else if (motion) {
+    root.classList.remove("motion");
+    motion = false;
+  }
+
+  var spots = document.querySelectorAll(".spot");
+  for (var sp = 0; sp < spots.length; sp++) {
+    spots[sp].addEventListener("pointermove", function (event) {
+      var box = event.currentTarget.getBoundingClientRect();
+      event.currentTarget.style.setProperty("--mx", (event.clientX - box.left) + "px");
+      event.currentTarget.style.setProperty("--my", (event.clientY - box.top) + "px");
+    });
+  }
 
   // ---- Init ----
 

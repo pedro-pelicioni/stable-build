@@ -50,7 +50,7 @@ Sem terminal conectado (ou dentro de uma sessão do Claude Code ou do Codex) e s
 
 #### Idioma
 
-O instalador, o aviso de uma linha do guard, o aviso de início de sessão e o que as skills escrevem para você (respostas no chat, `docs/go-live-report.md`, PRDs, stories, listas de ideias) saem em inglês ou em português do Brasil (`pt-BR`). A primeira pergunta do instalador é "Language / Idioma", e a resposta padrão vem de `LC_ALL`, `LC_MESSAGES` ou `LANG` (um valor que começa com `pt` escolhe português). Para responder de antemão:
+O instalador, o aviso de uma linha do guard, o aviso de início de sessão e o que as skills escrevem para você (respostas no chat, `docs/go-live-report.md`, PRDs, stories, listas de ideias) saem em inglês ou em português do Brasil (`pt-BR`). O inglês é o padrão em tudo: a primeira pergunta do instalador é "Language / Idioma", o Enter mantém o inglês, e o locale do sistema (`LANG`, `LC_ALL`) nunca troca o idioma. Para escolher português de antemão:
 
 ```sh
 bash install.sh --lang=pt-BR
@@ -58,7 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/pedro-pelicioni/stable-build/main/i
 ```
 
 - `--lang` (ou `--lang pt-BR`, com espaço) tem prioridade sobre `STABLE_BUILD_LANG`, que tem prioridade sobre o idioma salvo numa execução anterior. Valores aceitos, com maiúsculas ou minúsculas: `en`, `english`, `pt`, `pt-BR`, `pt_BR`, `portugues`, `português`. Qualquer outro valor encerra o instalador com erro.
-- Com `--yes`, sem terminal (uma sessão de agente conta como sem terminal) ou com `STABLE_BUILD_NO_TTY=1`, e sem idioma informado ou salvo, o instalador usa o padrão detectado sem perguntar.
+- Com `--yes`, sem terminal (uma sessão de agente conta como sem terminal) ou com `STABLE_BUILD_NO_TTY=1`, e sem idioma informado ou salvo, o instalador usa inglês sem perguntar.
 - A escolha fica salva como `"language"` em `~/.stable-build/config.json` (as outras chaves desse arquivo são mantidas) e registrada no `manifest.json`. Novas execuções, `--update`, `--uninstall`, `--help` e as mensagens de erro reaproveitam esse valor; para mudar, rode de novo com `--lang`. O `--dry-run` não salva nada. Salvar o idioma não liga o guard: ele só roda quando esse arquivo contém `"guard": true`.
 - Código, nomes de arquivo, ids de regra, flags de CLI e mensagens de commit continuam em inglês. As skills respondem no idioma salvo. Na conversa fora de uma skill, o agente só fica sabendo dele pelo aviso de início de sessão, que roda num projeto Arc com o guard ligado (`"guard": true`); ali, com `pt-BR` salvo, ele responde em português mesmo quando você escreve em inglês. Fora disso, e sem idioma salvo (por exemplo, depois de instalar com `/plugin` ou `codex plugin`), as respostas seguem o idioma em que você escreve.
 
@@ -119,16 +119,18 @@ No Claude Code, rode uma skill como `/stable-build:<name>`, ou descreva a tarefa
 | `gotchas` | Explica um alerta do guard, varre um repositório e liga ou desliga o guard de edição depois da sua confirmação. |
 | `go-live` | Checklist de testnet para mainnet (14 gates) com evidências, gravado em `docs/go-live-report.md`. Nunca faz deploy e nunca mexe em chaves. |
 | `studio-delegate` | Passa a escrita de contratos, auditorias ou deploys em testnet para a CLI do Arc Studio, da Circle, e trata a saída dela como não confiável até ser conferida onchain. O login no Arc Studio é feito por você. |
-| `analyst` | Brainstorming e pesquisa rápida de mercado ou técnica; a busca por ideias passa pelo `find-idea`. |
-| `pm` | PRD em `docs/plan/prd.md` com uma seção Onchain (rede, ativos, EOA ou smart account, blocklist, taxas em USDC). |
-| `ux-designer` | Specs de UX com os estados da Arc: um único saldo em USDC, taxas em USDC, finalidade com uma confirmação, transações descartadas e revertidas, banner de testnet. |
-| `architect` | Espinha da arquitetura que parte das invariantes de protocolo da Arc, mais uma checagem de prontidão. |
-| `dev` | Implementa uma story por vez, com o teste antes do código e testes de contrato no Arc Foundry. Uma story só está pronta com testes passando e um hash de transação de testnet registrado. |
-| `tech-writer` | Docs, textos explicativos e diagramas Mermaid, com uma fonte em docs.arc.io para cada fato sobre a Arc. |
+| `analyst` | **Sam.** Brainstorming e pesquisa rápida de mercado ou técnica; a busca por ideias passa pelo `find-idea`. |
+| `pm` | **Bobbilee.** PRD em `docs/plan/prd.md` com uma seção Onchain (rede, ativos, EOA ou smart account, blocklist, taxas em USDC). |
+| `ux-designer` | **Joshua.** Specs de UX com os estados da Arc: um único saldo em USDC, taxas em USDC, finalidade com uma confirmação, transações descartadas e revertidas, banner de testnet. |
+| `architect` | **Tim.** Espinha da arquitetura que parte das invariantes de protocolo da Arc, mais uma checagem de prontidão. |
+| `dev` | **Pedro.** Implementa uma story por vez, com o teste antes do código e testes de contrato no Arc Foundry. Uma story só está pronta com testes passando e um hash de transação de testnet registrado. |
+| `tech-writer` | **Mike.** Docs, textos explicativos e diagramas Mermaid, com uma fonte em docs.arc.io para cada fato sobre a Arc. |
 | `product-brief` | Brief de uma a duas páginas em `docs/plan/brief.md`. |
 | `architecture` | Cria, atualiza ou valida `docs/plan/architecture.md`. |
 | `stories` | Épicos e arquivos de story prontos para desenvolvimento, com critérios de aceite da Arc. |
 | `layered-review` | Code review em camadas independentes, incluindo um caçador de gotchas da Arc que roda a varredura do guard. |
+
+As seis skills de papéis têm primeiro nome, então basta dizer "fala com o Tim" ou "Sam, o que eu construo na Arc?": Tim (`architect`, lidera o plano), Bobbilee (`pm`), Sam (`analyst`), Joshua (`ux-designer`), Pedro (`dev`) e Mike (`tech-writer`). Os nomes são uma homenagem a pessoas da comunidade da Arc, com o autor do kit como desenvolvedor. Elas não construíram nem endossam este kit, e os agentes nunca se passam por elas nem falam por elas ou pela Circle.
 
 As skills de papéis e os workflows compartilhados (de `analyst` a `layered-review`) são adaptados do [BMad Method](https://github.com/bmad-code-org/BMAD-METHOD) v6.12.1 (MIT); veja [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) e [`skills/UPSTREAM.md`](plugins/stable-build/skills/UPSTREAM.md). O plugin opcional `stable-build-mcp` adiciona o servidor MCP de docs da Arc (`https://docs.arc.io/mcp`) e, no Claude Code, o servidor de docs de codegen da Circle (`https://api.circle.com/v1/codegen/mcp`); veja [o README dele](plugins/stable-build-mcp/README.md).
 

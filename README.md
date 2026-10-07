@@ -50,7 +50,7 @@ With no terminal attached (or inside a Claude Code or Codex session) and no `--y
 
 #### Language
 
-The installer, the guard's one-line warning, the session-start notice and what the skills write for you (chat replies, `docs/go-live-report.md`, PRDs, stories, idea lists) come in English or Brazilian Portuguese (`pt-BR`). The installer's first question is "Language / Idioma", and its default comes from `LC_ALL`, `LC_MESSAGES` or `LANG` (a value starting with `pt` picks Portuguese). To answer it up front:
+The installer, the guard's one-line warning, the session-start notice and what the skills write for you (chat replies, `docs/go-live-report.md`, PRDs, stories, idea lists) come in English or Brazilian Portuguese (`pt-BR`). English is the default everywhere: the installer's first question is "Language / Idioma", Enter keeps English, and your system locale (`LANG`, `LC_ALL`) is never used to switch. To pick Portuguese up front:
 
 ```sh
 bash install.sh --lang=pt-BR
@@ -58,7 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/pedro-pelicioni/stable-build/main/i
 ```
 
 - `--lang` (or `--lang pt-BR`, with a space) wins over `STABLE_BUILD_LANG`, which wins over the language saved by an earlier run. Accepted values, in any case: `en`, `english`, `pt`, `pt-BR`, `pt_BR`, `portugues`, `português`. Any other value stops the installer with an error.
-- With `--yes`, with no terminal (an agent session counts as none) or with `STABLE_BUILD_NO_TTY=1`, and no language given or saved, the installer uses the detected default without asking.
+- With `--yes`, with no terminal (an agent session counts as none) or with `STABLE_BUILD_NO_TTY=1`, and no language given or saved, the installer uses English without asking.
 - The choice is saved as `"language"` in `~/.stable-build/config.json` (any other keys in that file are kept) and recorded in `manifest.json`. Reruns, `--update`, `--uninstall`, `--help` and error messages reuse it; change it on any run with `--lang`. `--dry-run` saves nothing. Saving the language does not turn the guard on: the guard runs only when that file contains `"guard": true`.
 - Code, file names, rule ids, CLI flags and commit messages stay in English. Skills reply in the saved language. In plain chat outside a skill, the agent learns it only from the session-start notice, which runs in an Arc project with the guard on (`"guard": true`); there, with `pt-BR` saved, it replies in Portuguese even when you write in English. Elsewhere, and with no saved language (for example after a `/plugin` or `codex plugin` install), replies follow the language you write in.
 
@@ -119,16 +119,18 @@ In Claude Code, run a skill as `/stable-build:<name>`, or describe the task and 
 | `gotchas` | Explains a guard finding, scans a repo, turns the edit-time guard on or off after you confirm. |
 | `go-live` | Testnet-to-mainnet checklist (14 gates) with evidence, written to `docs/go-live-report.md`. Never deploys and never touches keys. |
 | `studio-delegate` | Hands contract writing, auditing or testnet deploys to Circle's Arc Studio CLI and treats its output as untrusted until checked onchain. You log in to Arc Studio yourself. |
-| `analyst` | Brainstorming and quick market or technical research; idea hunting goes through `find-idea`. |
-| `pm` | PRD in `docs/plan/prd.md` with an Onchain section (network, assets, EOA or smart account, blocklist, fees in USDC). |
-| `ux-designer` | UX specs with Arc states: one USDC balance, fees in USDC, one-confirmation finality, dropped and reverted transactions, testnet banner. |
-| `architect` | Architecture spine that starts from Arc's protocol invariants, plus a readiness check. |
-| `dev` | Implements one story at a time, test first, contract tests on Arc Foundry. A story is done only with passing tests and a recorded testnet transaction hash. |
-| `tech-writer` | Docs, explainers and Mermaid diagrams with a docs.arc.io source for every Arc fact. |
+| `analyst` | **Sam.** Brainstorming and quick market or technical research; idea hunting goes through `find-idea`. |
+| `pm` | **Bobbilee.** PRD in `docs/plan/prd.md` with an Onchain section (network, assets, EOA or smart account, blocklist, fees in USDC). |
+| `ux-designer` | **Joshua.** UX specs with Arc states: one USDC balance, fees in USDC, one-confirmation finality, dropped and reverted transactions, testnet banner. |
+| `architect` | **Tim.** Architecture spine that starts from Arc's protocol invariants, plus a readiness check. |
+| `dev` | **Pedro.** Implements one story at a time, test first, contract tests on Arc Foundry. A story is done only with passing tests and a recorded testnet transaction hash. |
+| `tech-writer` | **Mike.** Docs, explainers and Mermaid diagrams with a docs.arc.io source for every Arc fact. |
 | `product-brief` | One-to-two page brief in `docs/plan/brief.md`. |
 | `architecture` | Creates, updates or validates `docs/plan/architecture.md`. |
 | `stories` | Epics and dev-ready story files with Arc acceptance criteria. |
 | `layered-review` | Code review in independent layers, including an Arc gotcha hunter that runs the guard scan. |
+
+The six role skills have first names, so you can just say "talk to Tim" or "Sam, what should I build on Arc?": Tim (`architect`, leads the plan), Bobbilee (`pm`), Sam (`analyst`), Joshua (`ux-designer`), Pedro (`dev`) and Mike (`tech-writer`). The names are a tribute to people from the Arc community, with the kit's author as the developer. They did not build or endorse this kit, and the agents never claim to be them or speak for them or for Circle.
 
 The role skills and shared workflows (`analyst` through `layered-review`) are adapted from [BMad Method](https://github.com/bmad-code-org/BMAD-METHOD) v6.12.1 (MIT); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [`skills/UPSTREAM.md`](plugins/stable-build/skills/UPSTREAM.md). The optional `stable-build-mcp` plugin adds the Arc docs MCP server (`https://docs.arc.io/mcp`) and, in Claude Code, Circle's codegen docs server (`https://api.circle.com/v1/codegen/mcp`); see [its README](plugins/stable-build-mcp/README.md).
 

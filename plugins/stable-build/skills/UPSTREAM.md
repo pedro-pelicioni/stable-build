@@ -49,7 +49,7 @@ Every adapted file below starts (right after its frontmatter, if any) with an HT
 - The upstream Python runtime: the customization resolver, the config resolver and the memlog script, and every command that invoked them through uv. Persona and workflow settings are plain text in each SKILL.md; team overrides are an optional `.stable-build/<skill>.md` file read as standing rules; the memlog is replaced by an append-only `docs/plan/decisions.md`.
 - `customize.toml` files and their structural merge rules.
 - Upstream output folders; outputs go to `docs/plan/` and `docs/stories/` in the user's project.
-- Persona names and the real-person "identity" lines; role names only.
+- Upstream persona names and the real-person "identity" lines. Each role has a stable-build first name instead (Tim, Bobbilee, Sam, Joshua, Pedro, Mike), with a rule never to claim to be or speak for that person.
 - Upstream skill names and the upstream help router; menus route to stable-build skills (guide, find-idea, new-app, gotchas, go-live, and the ten methodology skills).
 - Party mode, advanced elicitation, deep research, PRFAQ, sprint planning, correct course, retrospective, build and QA skills (not shipped in v1).
 
