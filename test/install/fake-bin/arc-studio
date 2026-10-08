@@ -1,22 +1,40 @@
 #!/usr/bin/env node
-// Test double for Circle's Arc Studio CLI (`arc-studio`, npm @circle-fin/arc-studio-cli 1.1.3),
-// used by test/install/roundtrip.sh.
+// Test double for Circle's Arc Studio CLI (`arc-studio`, npm @circle-fin/arc-studio-cli),
+// used by test/install/roundtrip.sh. It never touches the network, a browser or the Keychain.
 //
-// Appends every argv to $SB_FAKE_LOG. `skills install --tool claude-code` does what 1.1.3 does
-// (per its dist/commands/skills-install.js): `claude plugin marketplace add <package dir> --scope user`
-// (falling back to `claude plugin marketplace update arc-studio-cli`), then
-// `claude plugin install arc-studio@arc-studio-cli -y`. The package dir is $SB_FAKE_ARC_PKG.
-// `--tool codex` exits 1 like the real CLI. login, logout and whoami are logged and refused
-// (exit 70), so a test can prove the installer never calls them.
+// Appends every argv to $SB_FAKE_LOG.
+//   --version                        the version npm installed (the package.json next to it, when it
+//                                    runs from an npm prefix), else $SB_FAKE_STUDIO_VERSION (default 1.2.1)
+//   skills install --tool claude-code  does what the real CLI does (dist/commands/skills-install.js):
+//                                    `claude plugin marketplace add <package dir> --scope user`
+//                                    (falling back to `claude plugin marketplace update arc-studio-cli`),
+//                                    then `claude plugin install arc-studio@arc-studio-cli -y`.
+//                                    The package dir is $SB_FAKE_ARC_PKG. `--tool codex` exits 1.
+//   whoami                           exit 0 ("Authenticated against ...") when the state file
+//                                    $HOME/.arc-studio/fake-signed-in exists, else exit 1
+//   login [--paste]                  needs a terminal on stdin (like the device-link flow), prints
+//                                    lines starting with "[fake arc-studio]", then creates the state
+//                                    file; SB_FAKE_STUDIO_LOGIN_FAIL=1 makes it fail instead
+//   logout                           refused (exit 70): the installer must never sign anyone out
 'use strict';
 const fs = require('fs');
+const path = require('path');
+const tty = require('tty');
 const { spawnSync } = require('child_process');
 
 const argv = process.argv.slice(2);
 if (process.env.SB_FAKE_LOG) fs.appendFileSync(process.env.SB_FAKE_LOG, ['arc-studio', ...argv].join(' ') + '\n');
 const say = (s) => process.stdout.write(s + '\n');
+const BASE = 'https://studio.example.invalid';
+const stateDir = path.join(process.env.HOME || '/nonexistent', '.arc-studio');
+const signedIn = path.join(stateDir, 'fake-signed-in');
 
-if (argv[0] === '--version') { say('1.1.3'); process.exit(0); }
+function version() {
+  // <prefix>/bin/arc-studio -> <prefix>/lib/node_modules/@circle-fin/arc-studio-cli/package.json
+  const pj = path.join(path.dirname(process.argv[1]), '..', 'lib', 'node_modules', '@circle-fin', 'arc-studio-cli', 'package.json');
+  try { return JSON.parse(fs.readFileSync(pj, 'utf8')).version; } catch (e) { return process.env.SB_FAKE_STUDIO_VERSION || '1.2.1'; }
+}
+if (argv[0] === '--version') { say(version()); process.exit(0); }
 if (argv[0] === 'skills' && argv[1] === 'install') {
   const i = argv.indexOf('--tool');
   const tool = i >= 0 ? argv[i + 1] : 'claude-code';
@@ -32,8 +50,25 @@ if (argv[0] === 'skills' && argv[1] === 'install') {
   say('Restart Claude Code to activate it. Other agents must use `arc-studio agent-guide` instead.');
   process.exit(0);
 }
-if (['login', 'logout', 'whoami'].includes(argv[0])) {
-  process.stderr.write(`fake arc-studio: '${argv[0]}' must never be called by the installer\n`);
+if (argv[0] === 'whoami') {
+  if (fs.existsSync(signedIn)) { say(`Authenticated against ${BASE}.`); process.exit(0); }
+  say(`Not authenticated against ${BASE} — run \`arc-studio login\`.`);
+  process.exit(1);
+}
+if (argv[0] === 'login') {
+  if (!tty.isatty(0)) { process.stderr.write('fake arc-studio: login needs a terminal on stdin\n'); process.exit(2); }
+  say(`[fake arc-studio] Opening your browser to authorize this machine: ${BASE}/device?code=FAKE-0000`);
+  if (process.env.SB_FAKE_STUDIO_LOGIN_FAIL === '1') {
+    say('[fake arc-studio] Timed out waiting for authorization.');
+    process.exit(1);
+  }
+  fs.mkdirSync(stateDir, { recursive: true, mode: 0o700 });
+  fs.writeFileSync(signedIn, argv.includes('--paste') ? 'paste\n' : 'browser\n', { mode: 0o600 });
+  say(`[fake arc-studio] Authenticated against ${BASE}.`);
+  process.exit(0);
+}
+if (argv[0] === 'logout') {
+  process.stderr.write("fake arc-studio: 'logout' must never be called by the installer\n");
   process.exit(70);
 }
 process.stderr.write(`fake arc-studio: unsupported: ${argv.join(' ')}\n`);

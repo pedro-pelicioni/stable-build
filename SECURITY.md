@@ -18,12 +18,22 @@ stable-build is a community project that is not affiliated with Circle. It insta
 
 ### `install.sh`
 
-- Calls only the native plugin CLIs: `claude plugin …` and `codex plugin …`. It never edits `settings.json`, `.claude.json`, `config.toml` or `hooks.json` by hand.
-- Writes only under `${STABLE_BUILD_HOME:-$HOME/.stable-build}`: `manifest.json`, and `config.json` with the language you chose plus, only with your consent, the guard keys. Both are written atomically, and other keys already in `config.json` are kept.
-- Records which marketplaces and plugins it added (`addedByUs`). `--uninstall` removes only those and leaves alone anything that was there before.
+- Changes Claude Code and Codex only through their plugin CLIs (`claude plugin …`, `codex plugin …`). It never edits `settings.json`, `.claude.json`, `config.toml` or `hooks.json` by hand.
+- Lists what is missing and asks once. Only after that yes (or `--yes`) does it install anything third-party (on `--update`, a no skips just those items and the update goes on):
+  - Circle's skills plugin, whose install accepts the Circle Developer Terms (the confirmation links them).
+  - The Arc Studio CLI with `npm install -g @circle-fin/arc-studio-cli@latest` when `arc-studio` is missing (under `--prefix`, into `DIR/.npm-global`), then its Claude Code plugin with `arc-studio skills install --tool claude-code`.
+  - Arc Foundry: the release archive for your platform and its `.sha256`, downloaded with `curl` from `api.github.com` and `github.com`. Nothing is installed unless the archive matches the checksum.
+- Writes these files itself, and nothing else outside Claude Code's and Codex's folders:
+  - Under `${STABLE_BUILD_HOME:-$HOME/.stable-build}`: `manifest.json`, `install.log` (the raw output of the last run's commands) and `config.json` (the language you chose plus, only with your consent, the guard keys). The JSON files are written atomically, and other keys already in `config.json` are kept.
+  - With your yes, `~/.local/bin/arc-forge`, `arc-cast` and `arc-anvil` (mode 0755). It never overwrites a file it did not write: the manifest records each binary's sha256. They are staged in a directory of their own inside `~/.local/bin` and run with `--version` there first, so a release that does not run replaces nothing, and the staging directory is removed even on Ctrl+C.
+  - With your yes, two marked lines at the end of one shell rc file when `~/.local/bin` is not on `PATH`: `~/.zshrc`, or for bash the profile it reads on macOS (`~/.bash_profile`, `~/.bash_login` or `~/.profile`) and `~/.bashrc` on Linux. A symlink there that points at nothing is not followed: you get the PATH line to add instead.
+- Records everything it added: `addedByUs` for each plugin and marketplace, the npm package and the npm prefix it went into, the Foundry binaries with their sha256, and the rc file with the two lines. `--uninstall` removes only those. It leaves the rest of the rc file byte for byte, a binary that no longer matches its sha256, and anything that was there before.
+- Starts the Arc Studio sign-in only with you at the terminal and after your yes: `arc-studio login` runs on your terminal and you authorize in your browser. It never signs in with `--yes`, without a terminal or in an agent session. It checks the sign-in with `arc-studio whoami`, a network call to Arc Studio. It never reads the token and never runs `arc-studio logout`.
+- Without a terminal (or in an agent session) and without `--yes`, it installs only the two stable-build plugins: no npm install, no download, no rc-file edit, and the guard stays off.
+- Its other network use (the plugin CLIs cloning from GitHub, `git ls-remote` on circlefin/skills, the MCP health checks) is listed in the README under "What gets touched".
 - Wraps all its code in `main()`, so a truncated download does nothing. It refuses to run as root and never uses `sudo`.
-- Never logs in to any service, never reads credentials, and never handles private keys. When Arc Studio needs a login, it prints the command for you to run yourself.
-- Sends no telemetry. `--dry-run` prints every planned action without changing anything.
+- Never reads credentials and never handles private keys.
+- Sends no telemetry. `--dry-run` prints every planned action, downloads nothing and changes nothing.
 - Verify a release download with the `install.sh.sha256` file attached to each GitHub release.
 
 ### Edit-time guard (`plugins/stable-build/hooks`, `scripts/`)

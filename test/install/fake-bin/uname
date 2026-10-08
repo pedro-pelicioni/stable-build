@@ -1,0 +1,19 @@
+#!/bin/sh
+# Test double for uname, used by test/install/roundtrip.sh, so the Arc Foundry target does not
+# depend on the machine running the tests: $SB_FAKE_UNAME_S (default Darwin) and
+# $SB_FAKE_UNAME_M (default arm64).
+s=${SB_FAKE_UNAME_S:-Darwin}
+m=${SB_FAKE_UNAME_M:-arm64}
+out=''
+if [ "$#" -eq 0 ]; then set -- -s; fi
+for a in "$@"; do
+  case "$a" in
+    -s) out="$out $s" ;;
+    -m|-p) out="$out $m" ;;
+    -r) out="$out 1.0" ;;
+    -n) out="$out fakehost" ;;
+    -a) out="$out $s fakehost 1.0 $m" ;;
+    *) echo "fake uname: unsupported option: $a" >&2; exit 64 ;;
+  esac
+done
+echo "${out# }"

@@ -1,0 +1,63 @@
+#!/usr/bin/env node
+// Test double for `npm`, used by test/install/roundtrip.sh. It never touches the network or the
+// real npm prefix.
+//
+// Appends every argv to $SB_FAKE_LOG. Supports what install.sh uses:
+//   npm prefix -g                                    prints the global prefix
+//   npm install -g @circle-fin/arc-studio-cli@latest  links <prefix>/bin/arc-studio to the fake
+//                                                    arc-studio next to this file, writes
+//                                                    <prefix>/lib/node_modules/@circle-fin/arc-studio-cli
+//   npm uninstall -g @circle-fin/arc-studio-cli      removes both
+// The global prefix is $npm_config_prefix (what install.sh sets under --prefix), else
+// $SB_FAKE_NPM_PREFIX, else $HOME/.npm-global. SB_FAKE_NPM_FAIL=1 makes install fail like an
+// EACCES on a root-owned prefix. $SB_FAKE_STUDIO_VERSION is the version it installs (default 1.2.1).
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+const argv = process.argv.slice(2);
+if (process.env.SB_FAKE_LOG) fs.appendFileSync(process.env.SB_FAKE_LOG, ['npm', ...argv].join(' ') + '\n');
+const say = (s) => process.stdout.write(s + '\n');
+function fail(msg, code) { process.stderr.write(msg + '\n'); process.exit(code || 1); }
+
+const PKG = '@circle-fin/arc-studio-cli';
+const home = process.env.HOME || '/nonexistent';
+const prefix = process.env.npm_config_prefix || process.env.SB_FAKE_NPM_PREFIX || path.join(home, '.npm-global');
+const isGlobal = argv.includes('-g') || argv.includes('--global');
+const spec = argv.slice(1).find((a) => !a.startsWith('-'));
+const lib = path.join(prefix, 'lib', 'node_modules', '@circle-fin', 'arc-studio-cli');
+const link = path.join(prefix, 'bin', 'arc-studio');
+const studioStub = path.join(path.dirname(fs.realpathSync(__filename)), 'arc-studio');
+
+if (argv[0] === '--version' || argv[0] === '-v') { say('10.9.0'); process.exit(0); }
+if (argv[0] === 'prefix' && isGlobal) { say(prefix); process.exit(0); }
+if ((argv[0] === 'install' || argv[0] === 'i') && isGlobal) {
+  if (!spec || (spec !== PKG && !spec.startsWith(PKG + '@'))) fail(`fake npm: only ${PKG} can be installed`, 64);
+  if (process.env.SB_FAKE_NPM_FAIL === '1') {
+    fail([
+      'npm error code EACCES',
+      'npm error syscall mkdir',
+      `npm error path ${path.join(prefix, 'lib', 'node_modules', '@circle-fin')}`,
+      'npm error errno -13',
+      'npm error Error: EACCES: permission denied',
+    ].join('\n'), 243);
+  }
+  const version = process.env.SB_FAKE_STUDIO_VERSION || '1.2.1';
+  fs.mkdirSync(lib, { recursive: true });
+  fs.writeFileSync(path.join(lib, 'package.json'), JSON.stringify({ name: PKG, version, bin: { 'arc-studio': './bin/arc-studio.mjs' } }, null, 2) + '\n');
+  fs.mkdirSync(path.dirname(link), { recursive: true });
+  try { fs.unlinkSync(link); } catch (e) { /* absent */ }
+  fs.symlinkSync(studioStub, link);
+  say('');
+  say('added 87 packages in 3s');
+  process.exit(0);
+}
+if ((argv[0] === 'uninstall' || argv[0] === 'rm' || argv[0] === 'remove') && isGlobal) {
+  if (spec !== PKG) fail(`fake npm: only ${PKG} can be removed`, 64);
+  try { fs.unlinkSync(link); } catch (e) { /* absent */ }
+  fs.rmSync(lib, { recursive: true, force: true });
+  say('');
+  say('removed 87 packages in 1s');
+  process.exit(0);
+}
+fail(`fake npm: unsupported: ${argv.join(' ')}`, 64);

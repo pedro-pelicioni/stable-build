@@ -30,23 +30,34 @@ bash install.sh --dry-run
 bash install.sh
 ```
 
-It asks before adding Circle's skills, the Arc Studio plugin and the guard. Run it in a normal terminal, not inside an agent session. Rerunning it is safe: it changes nothing that is already in place.
+Run it in a normal terminal, not inside an agent session. It asks at most two questions: the language (the first time only), then one confirmation that lists only what is missing on your machine:
+
+- **stable-build**: the six role skills, the workflow skills and the Arc gotcha guard, which is advisory (see [The guard](#the-guard)).
+- **MCP servers**: the Arc docs and Circle codegen servers (`stable-build-mcp`).
+- **Circle's skills**: installing Circle's plugin accepts the Circle Developer Terms, so the list links them (https://console.circle.com/legal/developer-terms).
+- **Arc Studio**: the CLI (`npm install -g @circle-fin/arc-studio-cli@latest`), its Claude Code plugin (`arc-studio skills install --tool claude-code`), then the sign-in: `arc-studio login` opens your browser and you click Authorize. Ctrl+C skips only the sign-in.
+- **Arc Foundry** (`arc-forge`, `arc-cast`, `arc-anvil`): the release for your platform from [circlefin/arc-foundry](https://github.com/circlefin/arc-foundry), checked against its `.sha256`, tried with `arc-forge --version` before it replaces anything, and installed in `~/.local/bin`, as in https://docs.arc.io/arc/tutorials/install-arc-foundry. If that folder is not on your `PATH`, two marked lines go into `~/.zshrc` (zsh), `~/.bash_profile` (bash on macOS; `~/.bash_login` or `~/.profile` instead when that is the file bash reads there) or `~/.bashrc` (bash on Linux); open a new terminal afterwards. Intel Macs, Windows and musl Linux have no prebuilt archive: build from source.
+
+One yes covers the whole list; a no changes nothing. With `--update`, the update itself needs no yes: the question lists only what is not set up yet (on a first `--update` after v0.1.0, the Arc Studio CLI and Arc Foundry), and a no skips just those, then the update goes on. Only Enter takes the default: any other answer that is not a yes or a no is asked again, and after three tries it counts as no. When the Arc Studio sign-in is all that is missing (for example after an install with `--yes`), the one question is whether to sign in now, and a no skips just the sign-in: the rest of the run, such as `--update`, goes on (`--no-login` stops the question). Then it prints one line per component (`✓` done, `–` skipped, `✗` failed, with the fix) and a short closing. The raw output of every command goes to `~/.stable-build/install.log`. A failed npm install, Foundry download or sign-in is reported on its line and the rest goes on. Rerunning is safe: what is already in place is neither asked about nor changed.
 
 | Option | Effect |
 |---|---|
-| `--dry-run` | Print every planned action and change nothing |
-| `--yes` | Accept every prompt, including turning the guard on (a guard you declined earlier stays off) |
-| `--no-hooks` | Leave the guard off and do not ask, now or on later runs |
+| `--dry-run` | Print the full plan and change nothing (nothing is downloaded) |
+| `--yes` | Install everything without asking, which accepts Circle's terms and turns the guard on; the sign-in is skipped. A guard you turned off earlier stays off |
+| `--no-hooks` | Leave the guard off, now and on later runs |
 | `--no-mcp` | Skip the `stable-build-mcp` plugin |
 | `--no-circle` | Skip Circle's skills plugin |
-| `--no-studio` | Skip the Arc Studio plugin |
-| `--update` | Update stable-build, plus Circle's and Arc Studio's plugins if this installer added them. Never turns the guard on |
+| `--no-studio` | Skip the Arc Studio CLI, its plugin and the sign-in |
+| `--no-login` | Skip only the Arc Studio sign-in; run `arc-studio login` later |
+| `--no-foundry` | Skip Arc Foundry |
+| `--verbose` | Print every command and its raw output |
+| `--update` | Update stable-build, plus Circle's plugin, the Arc Studio CLI and plugin, and Arc Foundry if this installer added them. Never turns the guard on |
 | `--uninstall` | Remove only what this installer added |
 | `--ref=TAG` | Install a tag or branch (default `main`, which moves only at releases) |
-| `--prefix=DIR` | Sandbox: every CLI call runs with `HOME=DIR`, so nothing outside `DIR` is written |
+| `--prefix=DIR` | Sandbox: every CLI call runs with `HOME=DIR`, npm installs into `DIR/.npm-global` and Arc Foundry into `DIR/.local/bin`, so nothing outside `DIR` is written |
 | `--lang=LANG` | Language of the installer and of the kit's replies, `en` or `pt-BR`; saved for later runs (see [Language](#language)) |
 
-With no terminal attached (or inside a Claude Code or Codex session) and no `--yes`, nobody can answer a prompt, so the installer adds only stable-build itself: Circle's plugin and the Arc Studio registration are skipped (each needs your yes, and installing Circle's plugin accepts Circle's developer terms), the guard stays off, and it tells you how to add them later. A "no" you type at the guard prompt is recorded in the manifest, so later runs, even with `--yes`, keep the guard off; turn it on with `/stable-build:gotchas enable`.
+With no terminal attached (or inside a Claude Code or Codex session) and no `--yes`, nobody can answer, so the installer adds only stable-build and `stable-build-mcp`. Nothing third-party is installed (Circle's plugin, Arc Studio, Arc Foundry, the rc-file lines) and the guard stays off; one line names what was left out and how to add it. With `--yes`, everything installs except the sign-in, which needs you at the browser: run `arc-studio login` later. A guard turned off with `--no-hooks` (or declined with an earlier version of the installer) stays off on later runs, even with `--yes`; turn it on with `/stable-build:gotchas enable`.
 
 #### Language
 
@@ -89,11 +100,12 @@ codex plugin add stable-build-mcp@stable-build
 
 ## What gets touched
 
-This is the complete list. The installer itself writes only under `~/.stable-build`. Everything in Claude Code's and Codex's folders is written by their own `claude plugin` and `codex plugin` commands; the installer never edits `settings.json`, `.claude.json`, `config.toml` or `hooks.json` by hand. `--uninstall` reverses only the entries it recorded as `addedByUs`.
+This is the complete list. The installer itself writes under `~/.stable-build` and, with your yes, three files in `~/.local/bin` and two lines in one shell rc file. Everything in Claude Code's and Codex's folders is written by their own `claude plugin` and `codex plugin` commands; the installer never edits `settings.json`, `.claude.json`, `config.toml` or `hooks.json` by hand. `--uninstall` reverses only the entries it recorded as `addedByUs`.
 
 | Where | Written by | What | When |
 |---|---|---|---|
 | `~/.stable-build/manifest.json` | installer | What it added, with `addedByUs` per entry, versions, the circlefin/skills commit, the language, whether it created `config.json`, and when you declined the guard | Always (not with `/plugin` or `codex plugin` installs) |
+| `~/.stable-build/install.log` | installer | The raw output of the commands the last run made (overwritten each run) | Every install or `--update` run, except `--dry-run` and a "no" at the confirmation; `--uninstall` deletes it |
 | `~/.stable-build/config.json` | installer or the `gotchas` skill | `{"schemaVersion":1,"language":"en"}`, plus `"guard":true` and `"consentAt"` once the guard is on. In an existing file only these keys change | Install (the language); the guard keys only after you agree to turn the guard on |
 | `~/.claude/settings.json` | `claude plugin` | `extraKnownMarketplaces`: `stable-build`, and `circle` if added. `enabledPlugins`: `stable-build@stable-build`, `stable-build-mcp@stable-build`, and `circle-skills@circle` / `arc-studio@arc-studio-cli` if added | Install |
 | `~/.claude/plugins/` | `claude plugin` | `known_marketplaces.json`, `installed_plugins.json`, a clone of each marketplace under `marketplaces/`, plugin copies under `cache/<marketplace>/<plugin>/<version>/` | Install |
@@ -101,11 +113,15 @@ This is the complete list. The installer itself writes only under `~/.stable-bui
 | `~/.codex/config.toml` | `codex plugin` | `[marketplaces.stable-build]`, `[marketplaces.circle-skills]` if added, and plugin entries (UNVERIFIED: from Codex docs and source) | Install |
 | `~/.codex/plugins/` | `codex plugin` | Plugin copies under `cache/<marketplace>/<plugin>/<version>/` and marketplace snapshots (UNVERIFIED) | Install |
 | Codex hook trust | Codex | Recorded when you trust the hooks in `/hooks` | Only if you do |
-| Arc Studio plugin | `arc-studio skills install --tool claude-code` | Marketplace `arc-studio-cli` (a folder inside the Arc Studio npm package) and plugin `arc-studio@arc-studio-cli` in Claude Code | Only if the `arc-studio` CLI is installed, the plugin is absent, and you agree |
+| Arc Studio CLI | `npm install -g` | The `@circle-fin/arc-studio-cli` package in npm's global prefix, which puts `arc-studio` on your `PATH` | Only if `arc-studio` is missing and you agree |
+| Arc Studio plugin | `arc-studio skills install --tool claude-code` | Marketplace `arc-studio-cli` (a folder inside the Arc Studio npm package) and plugin `arc-studio@arc-studio-cli` in Claude Code | Only if the plugin is absent and you agree |
+| Arc Studio sign-in | `arc-studio login` | Its token, in the macOS Keychain or in `~/.arc-studio/credentials.json` (0600) elsewhere. The installer never reads it | Only if you are not signed in, you are at a terminal, and you agree |
+| `~/.local/bin/arc-forge`, `arc-cast`, `arc-anvil` | installer | Arc Foundry from its GitHub release for your platform, checksum verified, mode 0755. The manifest records each file's sha256, so a file you put there later is never overwritten or removed | Only if `arc-forge` is missing and you agree |
+| `~/.zshrc`, `~/.bash_profile` (or `~/.bash_login` / `~/.profile`) or `~/.bashrc` | installer | Two lines at the end: `# added by stable-build (Arc Foundry)` and `export PATH="$HOME/.local/bin:$PATH"` | Only if `~/.local/bin` is not on your `PATH` and you agree |
 
-Never touched: shell profiles, `PATH`, global npm packages, permission allow-rules, other plugins or skills you already have, any login or token, and your projects. Skills write into a project only when you ask: `new-app` scaffolds into an empty folder you name, the planning skills write `docs/plan/` and `docs/stories/`, and `go-live` writes `docs/go-live-report.md`.
+Never touched: the other lines of your shell profiles, npm packages other than `@circle-fin/arc-studio-cli`, an `arc-forge` the installer did not install, permission allow-rules, other plugins or skills you already have, the Arc Studio token after sign-in, and your projects. Skills write into a project only when you ask: `new-app` scaffolds into an empty folder you name, the planning skills write `docs/plan/` and `docs/stories/`, and `go-live` writes `docs/go-live-report.md`.
 
-Network use at install: the plugin CLIs clone `pedro-pelicioni/stable-build` and `circlefin/skills` from GitHub, and the installer may run `git ls-remote` on circlefin/skills to record its commit. To avoid duplicate MCP tools it runs `claude mcp get arc-docs` and `claude mcp get circle` (and `codex mcp get arc-docs`); if you already have a server with one of those names, that command connects to it. After installing `stable-build-mcp` it checks only its two servers with `claude mcp get plugin:stable-build-mcp:arc-docs` and `…:circle-codegen`, which connect to `https://docs.arc.io/mcp` and `https://api.circle.com/v1/codegen/mcp`. It never runs `claude mcp list`, which would start every MCP server you have configured. Anything that already exists before the installer runs (for example Circle's marketplace or a user-scope `arc-docs` MCP server) is recorded as not ours and is kept on uninstall.
+Network use at install: the plugin CLIs clone `pedro-pelicioni/stable-build` and `circlefin/skills` from GitHub, and the installer may run `git ls-remote` on circlefin/skills to record its commit. npm downloads the Arc Studio CLI from its registry. `arc-studio whoami` checks your sign-in with Arc Studio, only when you are at a terminal. Arc Foundry's latest tag comes from `api.github.com` and its archive and `.sha256` from `github.com`. To avoid duplicate MCP tools it runs `claude mcp get arc-docs` and `claude mcp get circle` (and `codex mcp get arc-docs`); if you already have a server with one of those names, that command connects to it. After installing `stable-build-mcp` it checks only its two servers with `claude mcp get plugin:stable-build-mcp:arc-docs` and `…:circle-codegen`, which connect to `https://docs.arc.io/mcp` and `https://api.circle.com/v1/codegen/mcp`. It never runs `claude mcp list`, which would start every MCP server you have configured. Anything that already exists before the installer runs (for example Circle's marketplace or a user-scope `arc-docs` MCP server) is recorded as not ours and is kept on uninstall.
 
 ## Skills
 
@@ -170,7 +186,7 @@ If you used the installer:
 curl -fsSL https://raw.githubusercontent.com/pedro-pelicioni/stable-build/main/install.sh | bash -s -- --uninstall
 ```
 
-It removes, in reverse order, only what its manifest says it added, asks before removing Circle's plugin, deletes `manifest.json` and `config.json` from `~/.stable-build` (from a `config.json` that also holds keys of your own, only the language and guard keys come out) and the folder only if nothing else is in it, then re-lists both hosts and exits 1 if any stable-build entry is left. It never runs `arc-studio logout`. Claude Code 2.1.280 can leave empty `enabledPlugins` and `extraKnownMarketplaces` objects in `settings.json`; they are harmless.
+It removes, in reverse order, only what its manifest says it added: the plugins, then the Arc Studio CLI (`npm uninstall -g`, in the npm prefix it went into, even after a node switch), Arc Foundry's three binaries (only while each is still the file it wrote, by its recorded sha256) and its two PATH lines (the rest of your rc file stays byte for byte). It asks before removing Circle's plugin, deletes `manifest.json`, `config.json` and `install.log` from `~/.stable-build` (from a `config.json` that also holds keys of your own, only the language and guard keys come out) and the folder only if nothing else is in it, then re-lists both hosts and exits 1 if any stable-build entry is left. It never runs `arc-studio logout`. The npm package goes only after its Claude Code plugin, so while that plugin is registered and no `claude` CLI is available, the package is kept and the run ends incomplete, keeping the manifest for a later run. With neither Claude Code nor Codex available, it still removes Arc Foundry and the PATH lines, then reports the plugin entries it could not remove. Claude Code 2.1.280 can leave empty `enabledPlugins` and `extraKnownMarketplaces` objects in `settings.json`; they are harmless.
 
 By hand:
 
@@ -186,9 +202,15 @@ codex plugin remove stable-build@stable-build
 codex plugin marketplace remove stable-build
 
 # Both
-rm -f ~/.stable-build/manifest.json ~/.stable-build/config.json
+rm -f ~/.stable-build/manifest.json ~/.stable-build/config.json ~/.stable-build/install.log
 rmdir ~/.stable-build
+
+# Arc Studio CLI and Arc Foundry, if the installer added them
+npm uninstall -g @circle-fin/arc-studio-cli
+rm -f ~/.local/bin/arc-forge ~/.local/bin/arc-cast ~/.local/bin/arc-anvil
 ```
+
+Then delete the two lines stable-build added to your shell rc file: `# added by stable-build (Arc Foundry)` and the `export PATH="$HOME/.local/bin:$PATH"` line after it.
 
 Remove Circle's plugin (`circle-skills@circle`, Codex `circle@circle-skills`) only if you do not use it elsewhere.
 
@@ -217,6 +239,7 @@ Not run yet, or UNVERIFIED:
 - **Claude Code minimum version**: only 2.1.280 was tested; older versions are refused.
 - **Payouts starter**: the starter's own testnet end-to-end run needs a funded testnet key and has not been run. Not verified: a real mainnet batch, the production chunk size (starts at 50 rows), public RPC rate limits, and EIP-7702 delegated senders (refused by the starter).
 - **Arc Studio**: no live run (it needs a login); the parser fixtures are synthetic, built from the 1.1.3 source.
+- **Installer, Arc Studio CLI and Arc Foundry steps**: run only against stubs (npm, curl, `arc-studio`), never against the npm registry, GitHub releases or a real `arc-studio login`. Where `forge`, `cast` and `anvil` sit inside a real Arc Foundry archive (top level or one folder down; both are accepted) and what `arc-forge --version` prints are taken from the install guide: UNVERIFIED.
 - **go-live**: the mainnet contract-verification URL, and `--account` / `--ledger` / `arc-cast code` in Arc Foundry, are not documented on docs.arc.io.
 - **Program data**: deadlines in `data/programs.json` have a `valid_until`; the data check fails after one passes until the entry is updated. Several program details are marked UNVERIFIED in the file.
 

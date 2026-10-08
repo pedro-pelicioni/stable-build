@@ -46,7 +46,9 @@ else
   echo "arc-studio: missing"
 fi
 if grep -q '"guard": *true' "$H/config.json" 2>/dev/null; then echo "guard: on"; else echo "guard: off"; fi
-if command -v arc-forge >/dev/null 2>&1; then echo "arc-forge: $(arc-forge --version 2>/dev/null | head -n 1)"; else echo "arc-forge: missing"; fi
+if command -v arc-forge >/dev/null 2>&1; then echo "arc-forge: $(arc-forge --version 2>/dev/null | head -n 1)"
+elif [ -x "$HOME/.local/bin/arc-forge" ]; then echo "arc-forge: in ~/.local/bin, not on PATH"
+else echo "arc-forge: missing"; fi
 if command -v forge >/dev/null 2>&1; then echo "note: plain forge is on PATH"; fi
 if [ -f .stable-build/project.json ]; then echo "project: $(head -c 300 .stable-build/project.json | tr -d '\n')"; else echo "project: none"; fi
 ```
@@ -61,10 +63,11 @@ Show the result as one table (check, status, fix). Fixes are commands for the us
 |---|---|
 | Circle skills | Claude Code: `/plugin marketplace add circlefin/skills`, then `/plugin install circle-skills@circle` (https://docs.arc.io/llms.txt). Codex: `codex plugin marketplace add circlefin/skills --ref master`, then `codex plugin add circle@circle-skills` (UNVERIFIED: built from Codex source). Or re-run stable-build's `install.sh`. |
 | arc-docs MCP | Claude Code: `/plugin install stable-build-mcp@stable-build`. Docs-only alternative: `claude mcp add --transport http arc-docs https://docs.arc.io/mcp` (https://docs.arc.io/ai/mcp). |
-| Arc Studio CLI | `npm install -g @circle-fin/arc-studio-cli@latest` (Node 20+; https://docs.arc.io/ai/arc-studio-cli). If the installed version is behind npm latest, the same command upgrades it; the server can refuse old versions with HTTP 426. |
-| Arc Studio login | In their own terminal: `arc-studio login --paste`, or export `ARC_STUDIO_TOKEN`. Plain `login` stores the token in the macOS Keychain, which agent sandboxes often cannot read. |
+| Arc Studio CLI | First, re-run the stable-build installer in a normal terminal: it installs the CLI with npm, registers its Claude Code plugin and signs in (one confirmation). By hand: `npm install -g @circle-fin/arc-studio-cli@latest` (Node 20+; https://docs.arc.io/ai/arc-studio-cli). If the installed version is behind npm latest, the same command upgrades it; the server can refuse old versions with HTTP 426. |
+| Arc Studio login | First, re-run the stable-build installer in a normal terminal: it runs `arc-studio login` (browser sign-in) when you are not signed in. By hand, in their own terminal: `arc-studio login --paste`, or export `ARC_STUDIO_TOKEN`. Plain `login` stores the token in the macOS Keychain, which agent sandboxes often cannot read. |
 | Guard | `/stable-build:gotchas enable`; that skill explains the guard and asks for consent before writing it. In Codex, also open `/hooks` and trust the stable-build hooks (trust state is not checkable from a shell; UNVERIFIED). |
-| Arc Foundry | Follow https://docs.arc.io/arc/tutorials/install-arc-foundry: download the archive for the platform and its `.sha256` from https://github.com/circlefin/arc-foundry/releases, verify it, extract, move `forge`, `cast` and `anvil` to `~/.local/bin/arc-forge`, `arc-cast` and `arc-anvil`, then run `arc-forge --version`. Intel Macs build from source. |
+| Arc Foundry in `~/.local/bin`, not on `PATH` | Installed, but this shell cannot run it by name, and re-running the installer does not change that. Open a new terminal (and restart the agent session from it) if the installer said it added `~/.local/bin` to `PATH` in your shell's rc file; otherwise add `export PATH="$HOME/.local/bin:$PATH"` to that file (`~/.zshrc` for zsh, `~/.bash_profile` or `~/.bashrc` for bash), then open a new terminal. |
+| Arc Foundry missing | First, re-run the stable-build installer in a normal terminal: it downloads the release for the platform, verifies its `.sha256`, installs `arc-forge`, `arc-cast` and `arc-anvil` in `~/.local/bin` and puts that folder on `PATH` (open a new terminal afterwards). By hand, follow https://docs.arc.io/arc/tutorials/install-arc-foundry: download the archive for the platform and its `.sha256` from https://github.com/circlefin/arc-foundry/releases, verify it, extract, move `forge`, `cast` and `anvil` to `~/.local/bin/arc-forge`, `arc-cast` and `arc-anvil`, then run `arc-forge --version`. Intel Macs build from source. |
 | "plain forge is on PATH" | Not an error. In Arc projects use `arc-forge`, `arc-cast` and `arc-anvil --network arc`: standard `anvil` runs a standard EVM and cannot reproduce Arc-specific behavior (https://docs.arc.io/arc/references/evm-differences). |
 | Project | None means no stable-build starter here. `/stable-build:new-app` scaffolds one. |
 | Language | Optional: none saved means stable-build follows the user's language (see **Language**). To save one, re-run stable-build's `install.sh --lang=pt-BR` or `--lang=en`. |

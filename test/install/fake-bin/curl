@@ -1,0 +1,54 @@
+#!/usr/bin/env node
+// Test double for `curl`, used by test/install/roundtrip.sh, so Arc Foundry installs are
+// hermetic: no network. It serves only
+//   https://api.github.com/repos/circlefin/arc-foundry/releases/latest
+//       {"tag_name": $SB_FAKE_FOUNDRY_TAG (default v0.8.0-2)}; SB_FAKE_CURL_API_FAIL=1 fails it
+//   https://github.com/circlefin/arc-foundry/releases/download/<tag>/<asset>
+//       files from the fixture directory $SB_FAKE_FOUNDRY_DIR/<tag>/<asset> (404 when absent);
+//       SB_FAKE_SHA_BAD=1 serves a .sha256 with a wrong digest
+// Any other URL fails loudly (exit 99). Appends every argv to $SB_FAKE_LOG. Understands -o FILE
+// and --retry N; other flags (-fsSL) are accepted and ignored.
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+const argv = process.argv.slice(2);
+if (process.env.SB_FAKE_LOG) fs.appendFileSync(process.env.SB_FAKE_LOG, ['curl', ...argv].join(' ') + '\n');
+
+let out = null; let url = null;
+for (let i = 0; i < argv.length; i++) {
+  const a = argv[i];
+  if (a === '-o' || a === '--output') out = argv[++i];
+  else if (a === '--retry' || a === '--max-time' || a === '--connect-timeout') i++;
+  else if (a.startsWith('-')) continue;
+  else url = a;
+}
+function send(data) {
+  if (out) fs.writeFileSync(out, data); else process.stdout.write(data);
+  process.exit(0);
+}
+function http(code) { process.stderr.write(`curl: (22) The requested URL returned error: ${code}\n`); process.exit(22); }
+
+const API = 'https://api.github.com/repos/circlefin/arc-foundry/releases/latest';
+const DL = 'https://github.com/circlefin/arc-foundry/releases/download/';
+if (url === API) {
+  if (process.env.SB_FAKE_CURL_API_FAIL === '1') http(403);
+  const tag = process.env.SB_FAKE_FOUNDRY_TAG || 'v0.8.0-2';
+  send(JSON.stringify({ tag_name: tag, name: tag, draft: false, prerelease: false }, null, 2) + '\n');
+}
+if (url && url.startsWith(DL)) {
+  const dir = process.env.SB_FAKE_FOUNDRY_DIR;
+  if (!dir) { process.stderr.write('fake curl: SB_FAKE_FOUNDRY_DIR is not set\n'); process.exit(99); }
+  const [tag, asset, extra] = url.slice(DL.length).split('/');
+  if (!tag || !asset || extra !== undefined || asset.includes('..') || tag.includes('..')) http(404);
+  const f = path.join(dir, tag, asset);
+  if (!fs.existsSync(f)) http(404);
+  let data = fs.readFileSync(f);
+  if (asset.endsWith('.sha256') && process.env.SB_FAKE_SHA_BAD === '1') {
+    const t = data.toString('utf8');
+    data = Buffer.from((t[0] === '0' ? '1' : '0') + t.slice(1));
+  }
+  send(data);
+}
+process.stderr.write(`fake curl: unexpected URL: ${url}\n`);
+process.exit(99);
