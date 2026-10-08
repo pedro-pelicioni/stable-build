@@ -12,7 +12,7 @@ stable-build is a community kit for apps built on Arc. It is not affiliated with
 | `.agents/plugins/marketplace.json` | Codex marketplace `stable-build` (same plugins) |
 | `plugins/stable-build/` | Skills, `data/`, `hooks/hooks.json`, `scripts/` (guard), with `.claude-plugin/` and `.codex-plugin/` manifests |
 | `plugins/stable-build-mcp/` | `.mcp.json` (Claude: `arc-docs` + `circle-codegen`) and `codex.mcp.json` (Codex: `arc-docs` only) |
-| `install.sh` | Thin wrapper around `claude plugin` / `codex plugin`; keeps `$STABLE_BUILD_HOME/manifest.json` and the language in `config.json` |
+| `install.sh` | Thin wrapper around `claude plugin` / `codex plugin`, plus the Arc Studio CLI (npm) and Arc Foundry (`~/.local/bin`) after one confirmation; keeps `$STABLE_BUILD_HOME/manifest.json`, the language in `config.json` and raw output in `install.log` |
 | `README.md`, `README.pt-BR.md` | User docs in English and Brazilian Portuguese, kept in step by `tools/check-docs-sync.mjs` |
 | `tools/` | `check-names.mjs`, `check-links.mjs`, `build-catalog.mjs`, `build-data.mjs`, `check-docs-sync.mjs` |
 | `test/` | `node --test` suites, install round trip (`test/install/roundtrip.sh`), installer i18n checks, guard fixtures |
@@ -35,6 +35,8 @@ node tools/check-links.mjs             # network link check + docs-drift check o
 bash -n install.sh && /bin/bash -n install.sh   # syntax, including macOS bash 3.2
 HOME="$(mktemp -d)" bash test/install/roundtrip.sh   # installer round trip with stub CLIs (CI also runs it under /bin/bash)
 ```
+
+The round trip stubs `claude`, `codex`, `arc-studio`, `npm`, `curl` and `uname` (`test/install/fake-bin/`), so it never touches the network, a real npm prefix or Arc Foundry release. Its system tools come from `$SYS_PATH`, a copy of `/usr/bin` and `/bin` without `arc-studio`, Arc Foundry, `npm`, `claude`, `codex` and `curl`, so a scenario that leaves a stub out on purpose never reaches a real one; end every PATH you add with it. Never run the real installer outside a temporary HOME, and never run the real `arc-studio login`.
 
 Validate plugins only with a throwaway HOME:
 

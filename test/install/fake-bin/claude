@@ -9,6 +9,8 @@
 // GitHub sources "owner/repo[@ref]" resolve to fixture directories $SB_FAKE_REPOS/owner/repo.
 // $SB_FAKE_USER_MCP lists user-scope MCP server names reported by `claude mcp get`.
 // $SB_FAKE_CLAUDE_VERSION overrides the reported version.
+// $SB_FAKE_CLAUDE_UPDATE_FAIL=<plugin@marketplace> makes `claude plugin update` of that plugin fail.
+// $SB_FAKE_CLAUDE_INSTALL_FAIL=<plugin@marketplace> makes `claude plugin install` of that plugin fail.
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -184,6 +186,7 @@ if (a0 === 'plugin' || a0 === 'plugins') {
   if (a1 === 'install' || a1 === 'i') {
     takeOpt('--scope'); takeOpt('-s'); takeFlag('-y', '--yes');
     if (!args[0] || !args[0].includes('@')) fail('fake claude: use plugin@marketplace');
+    if (process.env.SB_FAKE_CLAUDE_INSTALL_FAIL === args[0]) fail(`Failed to install plugin "${args[0]}": network error (fake)`);
     installPlugin(args[0]);
     process.exit(0);
   }
@@ -196,6 +199,7 @@ if (a0 === 'plugin' || a0 === 'plugins') {
   if (a1 === 'update') {
     takeOpt('--scope'); takeOpt('-s'); takeFlag('-y', '--yes');
     if (!installed().plugins[args[0]]) fail(`Failed to update plugin "${args[0]}": not installed`);
+    if (process.env.SB_FAKE_CLAUDE_UPDATE_FAIL === args[0]) fail(`Failed to update plugin "${args[0]}": network error (fake)`);
     installPlugin(args[0], { update: true });
     process.exit(0);
   }

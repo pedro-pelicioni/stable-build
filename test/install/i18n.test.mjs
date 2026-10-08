@@ -238,9 +238,10 @@ describe("message tables", () => {
   const SAME_OK = new Map([
     ["lang_banner", "bilingual"], ["lang_menu", "bilingual"], ["lang_menu_retry", "bilingual"],
     ["err_lang_unknown", "bilingual"], ["err_lang_missing", "bilingual"], ["err_lang_env", "bilingual"],
-    ["ours_c_ver", "names only"], ["ours_x_ver", "names only"], ["fin_claude", "names only"], ["fin_codex", "names only"],
-    ["hdr_hosts", "'hosts' is used as is in pt-BR"], ["sec_studio", "product name"], ["col_guard", "feature name"],
-    ["ans_no", "N is the same letter"],
+    ["hdr_short", "names and versions only"], ["ok_sb", "names only"], ["ok_foundry", "names only"],
+    ["cf_bullet", "a bullet and a placeholder"],
+    ["hdr_hosts", "'hosts' is used as is in pt-BR"], ["sec_studio", "product name"], ["sec_foundry", "product name"],
+    ["col_guard", "feature name"], ["ans_no", "N is the same letter"],
   ]);
 
   test("pt-BR entries are translated (identical only when allowlisted)", () => {
@@ -293,8 +294,8 @@ describe("no user-facing literal bypasses msg", () => {
   // copy-paste commands, file names, language codes.
   const ALLOWED_WORDS = new Set([
     "claude", "codex", "circle", "mcp", "studio", "arc", "cli", "stable", "build",
-    "plugin", "marketplace", "uninstall", "remove", "list", "rm", "rmdir",
-    "config", "json", "manifest", "en", "pt", "br",
+    "plugin", "marketplace", "uninstall", "remove", "list", "rm", "rmdir", "login",
+    "config", "json", "manifest", "en", "pt", "br", "foundry",
   ]);
   const OUTPUT_CMDS = /(^|[\s;({|&]|\$\()(printf|echo|say|line)[ \t]+/gm;
 

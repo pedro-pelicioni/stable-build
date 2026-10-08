@@ -97,15 +97,21 @@ Nothing in this section is vendored, copied or patched in this repository, apart
 - License: Apache-2.0, https://github.com/circlefin/skills/blob/master/LICENSE
 - Tested against: commit `58ab8648bb1ae9d037a3bf5197ad3bb01262f5b1` (plugin version 1.6.0). The upstream repo has no tags, so `CHANGELOG.md` records the SHA for each release.
 - How it is used: the installer runs Circle's own marketplace commands (`circle-skills@circle` for Claude Code, `circle@circle-skills` for Codex), so the files come from Circle's repo. Our corrections and additions for Arc are original text in our own `gotchas` skill. We do not ship a modified copy of any Circle file.
-- Circle states that its skills' outputs may configure fees that go to Circle and that use is subject to the Circle Developer Terms: https://console.circle.com/legal/developer-terms. The installer shows that notice before it adds the skills.
+- Circle states that its skills' outputs may configure fees that go to Circle and that use is subject to the Circle Developer Terms: https://console.circle.com/legal/developer-terms. The installer adds the skills only after a person's yes (or `--yes`) to its one confirmation, whose bullet for Circle's skills links those terms. When skills that can lead to paid services are installed (such as `use-circle-cli`), its closing lines name them.
 
 ### Arc Studio CLI (`@circle-fin/arc-studio-cli`)
 
 - Source: https://www.npmjs.com/package/@circle-fin/arc-studio-cli. Docs: https://docs.arc.io/ai/arc-studio-cli.
 - License: MIT, Copyright (c) 2026 Circle Internet Financial, LLC. The package's LICENSE file from version 1.1.3 is kept unmodified at [third_party/arc-studio-cli/LICENSE](third_party/arc-studio-cli/LICENSE).
-- The CLI is not bundled. Users install it from npm. When it is already present, the installer runs the CLI's own `arc-studio skills install` command.
+- The CLI is not bundled. With a person's yes to the installer's one confirmation (or `--yes`), `install.sh` runs `npm install -g @circle-fin/arc-studio-cli@latest` when `arc-studio` is not found, then the CLI's own `arc-studio skills install --tool claude-code` (Claude Code only), then `arc-studio login` when someone is at the terminal to sign in. It records the npm package in its manifest, so `--uninstall` removes it with `npm uninstall -g` after the plugin. It never runs `arc-studio logout`.
 - Our `studio-delegate` skill adapts some wording from the package's bundled agent guidance (`agents/arc-studio.md`, `SKILL.md` and `agent-guide` output, version 1.1.3). Those files carry a header that says so, and the MIT notice above applies to that wording. We changed it to work in both Claude Code and Codex, check results on-chain before trusting them, and never log in for the user.
 - The hosted Arc Studio service is a separate Circle service under Circle's own terms.
+
+### Arc Foundry (circlefin/arc-foundry)
+
+- Source: https://github.com/circlefin/arc-foundry, releases at https://github.com/circlefin/arc-foundry/releases. Install guide: https://docs.arc.io/arc/tutorials/install-arc-foundry.
+- License: UNVERIFIED (not checked for this notice; see the license files in that repository).
+- Not vendored. With a person's yes to the installer's one confirmation (or `--yes`), `install.sh` downloads the release archive for the platform (`arc-foundry-<tag>-<target>.tar.gz`) and its `.sha256` from GitHub, checks the archive against that checksum, and installs the archive's `forge`, `cast` and `anvil`, unmodified, as `arc-forge`, `arc-cast` and `arc-anvil` in `~/.local/bin`, as the install guide describes. It records each file's sha256, so `--update` and `--uninstall` touch only those files.
 
 ### Hosted MCP servers (configured by URL only)
 
