@@ -2197,7 +2197,9 @@ JS_EOF
     if [ "${#want}" != 64 ] || [ "$got" != "$want" ]; then
       rm -rf "$dir"; say_t fail_foundry_sha; return 0
     fi
-    if ! tar -xzf "$dir/$name" -C "$dir/x" >>"$LOG_FILE" 2>&1; then rm -rf "$dir"; say_t fail_foundry_archive; return 0; fi
+    # GNU tar reads backslash escapes in -C and -f arguments ("tmp\14" becomes "tmp\f"), so it gets
+    # only a relative name: the subshell cd takes the path, which may hold a backslash
+    if ! (cd "$dir/x" && tar -xzf "../$name") >>"$LOG_FILE" 2>&1; then rm -rf "$dir"; say_t fail_foundry_archive; return 0; fi
     src=''
     for t in "$dir/x" "$dir/x"/*; do
       if [ -d "$t" ] && foundry_has_tools "$t"; then src=$t; break; fi
