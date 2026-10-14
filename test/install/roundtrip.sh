@@ -1430,8 +1430,8 @@ check "install exits 0" test "$RC" = 0
 for s in "  ✓ skills da Circle: 3 " "  ✓ stable-build " "  ✓ servidores MCP: arc-docs, circle-codegen (conectados)" \
   "  ✓ CLI do Arc Studio 1.2.1 e o plugin dela para o Claude Code (no Codex, use a skill studio-delegate do stable-build)" \
   "  – Arc Studio: faça login depois com: arc-studio login" "  ✓ Arc Foundry v0.8.0-2 (arc-forge, arc-cast, arc-anvil); adicione " \
-  "  ✓ Guard ligado (só avisa): confere cada edição com as regras da Arc" "Concluído. Abra o Claude Code ou o Codex no seu projeto e pergunte: \"Sam, o que eu construo na Arc?\"" \
-  "Seu time: Tim (arquiteto) · Bobbilee (PM) · Sam (analista) · Joshua (UX) · Pedro (dev) · Mike (tech writer)" \
+  "  ✓ Guard ligado (só avisa): confere cada edição com as regras da Arc" "Concluído. Abra o Claude Code ou o Codex no seu projeto e pergunte: \"Tim, o que eu construo na Arc?\"" \
+  "Seu time: Sam (arquiteto) · Bobbilee (PM) · Tim (analista) · Joshua (UX) · Pedro (dev) · Mike (tech writer)" \
   "Algumas skills da Circle podem levar a serviços pagos (use-circle-cli); revise-as em /plugin." \
   "O stable-build é um projeto comunitário, sem afiliação com a Circle."; do
   check "pt-BR: $s" out_has "$s"
@@ -1659,7 +1659,7 @@ check "the choice is not echoed: the one-line header comes next" test "$(sed -n 
 check "the confirmation, in Portuguese" out_has "O stable-build $VER prepara o Claude Code e o Codex para apps construídos na Arc:"
 check "it lists stable-build with the guard" out_has "  • stable-build: um time de 6 especialistas (skills) e o guard de pegadinhas da Arc (só avisa)"
 check "exactly two questions" test "$(questions)" = 2
-for s in "  ✓ stable-build " "  ✓ Guard ligado (só avisa): confere cada edição com as regras da Arc" "Concluído." "Seu time: Tim (arquiteto)"; do
+for s in "  ✓ stable-build " "  ✓ Guard ligado (só avisa): confere cada edição com as regras da Arc" "Concluído." "Seu time: Sam (arquiteto)"; do
   check "then Portuguese: $s" out_has "$s"
 done
 check "no English in the installer's own lines" no_english_leak
@@ -1794,7 +1794,7 @@ check "no raw npm output" out_lacks "added 87 packages"
 check "the raw output is in ~/.stable-build/install.log" grep -q "added 87 packages" "$HT5/.stable-build/install.log"
 check "guard on, language en" cfg_true "$HT5/.stable-build/config.json" "c.guard === true && c.language === 'en'"
 check "manifest: npm package, Arc Foundry and the PATH lines are ours" mf_true "$HT5/.stable-build/manifest.json" "m.tools.arcStudioCli.addedByUs === true && m.tools.arcFoundry.addedByUs === true && m.tools.arcFoundry.pathLine.file === '$HT5/.zshrc'"
-check "the closing lines" out_has 'Done. Open Claude Code in your project and ask: "Sam, what should I build on Arc?"'
+check "the closing lines" out_has 'Done. Open Claude Code in your project and ask: "Tim, what should I build on Arc?"'
 show_out_on_fail "$F0"
 printf '  info  fresh interactive install, %s lines without the sign-in output:\n' "$T5_LINES"
 sed 's/^/        | /' "$WORK/fresh-transcript.txt"

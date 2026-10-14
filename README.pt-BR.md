@@ -135,10 +135,10 @@ No Claude Code, rode uma skill como `/stable-build:<name>`, ou descreva a tarefa
 | `gotchas` | Explica um alerta do guard, varre um repositório e liga ou desliga o guard de edição depois da sua confirmação. |
 | `go-live` | Checklist de testnet para mainnet (14 gates) com evidências, gravado em `docs/go-live-report.md`. Nunca faz deploy e nunca mexe em chaves. |
 | `studio-delegate` | Passa a escrita de contratos, auditorias ou deploys em testnet para a CLI do Arc Studio, da Circle, e trata a saída dela como não confiável até ser conferida onchain. O login no Arc Studio é feito por você. |
-| `analyst` | **Sam.** Brainstorming e pesquisa rápida de mercado ou técnica; a busca por ideias passa pelo `find-idea`. |
+| `analyst` | **Tim.** Brainstorming e pesquisa rápida de mercado ou técnica; a busca por ideias passa pelo `find-idea`. |
 | `pm` | **Bobbilee.** PRD em `docs/plan/prd.md` com uma seção Onchain (rede, ativos, EOA ou smart account, blocklist, taxas em USDC). |
 | `ux-designer` | **Joshua.** Specs de UX com os estados da Arc: um único saldo em USDC, taxas em USDC, finalidade com uma confirmação, transações descartadas e revertidas, banner de testnet. |
-| `architect` | **Tim.** Espinha da arquitetura que parte das invariantes de protocolo da Arc, mais uma checagem de prontidão. |
+| `architect` | **Sam.** Espinha da arquitetura que parte das invariantes de protocolo da Arc, mais uma checagem de prontidão. |
 | `dev` | **Pedro.** Implementa uma story por vez, com o teste antes do código e testes de contrato no Arc Foundry. Uma story só está pronta com testes passando e um hash de transação de testnet registrado. |
 | `tech-writer` | **Mike.** Docs, textos explicativos e diagramas Mermaid, com uma fonte em docs.arc.io para cada fato sobre a Arc. |
 | `product-brief` | Brief de uma a duas páginas em `docs/plan/brief.md`. |
@@ -146,7 +146,7 @@ No Claude Code, rode uma skill como `/stable-build:<name>`, ou descreva a tarefa
 | `stories` | Épicos e arquivos de story prontos para desenvolvimento, com critérios de aceite da Arc. |
 | `layered-review` | Code review em camadas independentes, incluindo um caçador de gotchas da Arc que roda a varredura do guard. |
 
-As seis skills de papéis têm primeiro nome, então basta dizer "fala com o Tim" ou "Sam, o que eu construo na Arc?": Tim (`architect`, lidera o plano), Bobbilee (`pm`), Sam (`analyst`), Joshua (`ux-designer`), Pedro (`dev`) e Mike (`tech-writer`). Os nomes são uma homenagem a pessoas da comunidade da Arc, com o autor do kit como desenvolvedor. Elas não construíram nem endossam este kit, e os agentes nunca se passam por elas nem falam por elas ou pela Circle.
+As seis skills de papéis têm primeiro nome, então basta dizer "fala com o Sam" ou "Tim, o que eu construo na Arc?": Sam (`architect`, lidera o plano), Bobbilee (`pm`), Tim (`analyst`), Joshua (`ux-designer`), Pedro (`dev`) e Mike (`tech-writer`). Os nomes são uma homenagem a pessoas da comunidade da Arc, com o autor do kit como desenvolvedor. Elas não construíram nem endossam este kit, e os agentes nunca se passam por elas nem falam por elas ou pela Circle.
 
 As skills de papéis e os workflows compartilhados (de `analyst` a `layered-review`) são adaptados do [BMad Method](https://github.com/bmad-code-org/BMAD-METHOD) v6.12.1 (MIT); veja [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) e [`skills/UPSTREAM.md`](plugins/stable-build/skills/UPSTREAM.md). O plugin opcional `stable-build-mcp` adiciona o servidor MCP de docs da Arc (`https://docs.arc.io/mcp`) e, no Claude Code, o servidor de docs de codegen da Circle (`https://api.circle.com/v1/codegen/mcp`); veja [o README dele](plugins/stable-build-mcp/README.md).
 

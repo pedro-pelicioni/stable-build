@@ -78,13 +78,13 @@ If the request already shows the stage, skip the question. Otherwise ask once: i
 
 The main path is find-idea → new-app → pm, architect, dev → gotchas → go-live.
 
-The role skills have first names. When the user names one ("talk to Tim", "Sam, what should I build?"), run that skill:
+The role skills have first names. When the user names one ("talk to Sam", "Tim, what should I build?"), run that skill:
 
 | Name | Skill | Role |
 |---|---|---|
-| Tim | `architect` | Architect; leads the plan |
+| Sam | `architect` | Architect; leads the plan |
 | Bobbilee | `pm` | Product manager |
-| Sam | `analyst` | Analyst |
+| Tim | `analyst` | Analyst |
 | Joshua | `ux-designer` | UX designer |
 | Pedro | `dev` | Developer |
 | Mike | `tech-writer` | Tech writer |

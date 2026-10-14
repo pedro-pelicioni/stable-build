@@ -135,10 +135,10 @@ In Claude Code, run a skill as `/stable-build:<name>`, or describe the task and 
 | `gotchas` | Explains a guard finding, scans a repo, turns the edit-time guard on or off after you confirm. |
 | `go-live` | Testnet-to-mainnet checklist (14 gates) with evidence, written to `docs/go-live-report.md`. Never deploys and never touches keys. |
 | `studio-delegate` | Hands contract writing, auditing or testnet deploys to Circle's Arc Studio CLI and treats its output as untrusted until checked onchain. You log in to Arc Studio yourself. |
-| `analyst` | **Sam.** Brainstorming and quick market or technical research; idea hunting goes through `find-idea`. |
+| `analyst` | **Tim.** Brainstorming and quick market or technical research; idea hunting goes through `find-idea`. |
 | `pm` | **Bobbilee.** PRD in `docs/plan/prd.md` with an Onchain section (network, assets, EOA or smart account, blocklist, fees in USDC). |
 | `ux-designer` | **Joshua.** UX specs with Arc states: one USDC balance, fees in USDC, one-confirmation finality, dropped and reverted transactions, testnet banner. |
-| `architect` | **Tim.** Architecture spine that starts from Arc's protocol invariants, plus a readiness check. |
+| `architect` | **Sam.** Architecture spine that starts from Arc's protocol invariants, plus a readiness check. |
 | `dev` | **Pedro.** Implements one story at a time, test first, contract tests on Arc Foundry. A story is done only with passing tests and a recorded testnet transaction hash. |
 | `tech-writer` | **Mike.** Docs, explainers and Mermaid diagrams with a docs.arc.io source for every Arc fact. |
 | `product-brief` | One-to-two page brief in `docs/plan/brief.md`. |
@@ -146,7 +146,7 @@ In Claude Code, run a skill as `/stable-build:<name>`, or describe the task and 
 | `stories` | Epics and dev-ready story files with Arc acceptance criteria. |
 | `layered-review` | Code review in independent layers, including an Arc gotcha hunter that runs the guard scan. |
 
-The six role skills have first names, so you can just say "talk to Tim" or "Sam, what should I build on Arc?": Tim (`architect`, leads the plan), Bobbilee (`pm`), Sam (`analyst`), Joshua (`ux-designer`), Pedro (`dev`) and Mike (`tech-writer`). The names are a tribute to people from the Arc community, with the kit's author as the developer. They did not build or endorse this kit, and the agents never claim to be them or speak for them or for Circle.
+The six role skills have first names, so you can just say "talk to Sam" or "Tim, what should I build on Arc?": Sam (`architect`, leads the plan), Bobbilee (`pm`), Tim (`analyst`), Joshua (`ux-designer`), Pedro (`dev`) and Mike (`tech-writer`). The names are a tribute to people from the Arc community, with the kit's author as the developer. They did not build or endorse this kit, and the agents never claim to be them or speak for them or for Circle.
 
 The role skills and shared workflows (`analyst` through `layered-review`) are adapted from [BMad Method](https://github.com/bmad-code-org/BMAD-METHOD) v6.12.1 (MIT); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [`skills/UPSTREAM.md`](plugins/stable-build/skills/UPSTREAM.md). The optional `stable-build-mcp` plugin adds the Arc docs MCP server (`https://docs.arc.io/mcp`) and, in Claude Code, Circle's codegen docs server (`https://api.circle.com/v1/codegen/mcp`); see [its README](plugins/stable-build-mcp/README.md).
 

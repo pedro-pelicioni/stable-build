@@ -145,7 +145,7 @@ describe('site: the team and the numbers match the kit', () => {
     assert.equal(roles.length, 6);
     const cards = [...HTML.matchAll(/<li class="card[^"]*" data-skill="([^"]+)"[\s\S]*?<\/li>/g)];
     assert.deepEqual(cards.map((m) => m[1]).sort(), [...roles].sort());
-    assert.equal(cards[0][1], 'architect', 'the lead card (Tim, architect) comes first');
+    assert.equal(cards[0][1], 'architect', 'the lead card (Sam, architect) comes first');
     assert.match(cards[0][0], /class="card spot card--lead"/);
     for (const m of cards) {
       const name = personaName(m[1]);

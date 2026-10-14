@@ -348,9 +348,9 @@ Environment:
       guard_codex_trust) _T="  Codex: open /hooks in Codex and trust the stable-build hooks; Codex skips plugin hooks until you do." ;;
       # closing lines
       ver_was) _T=" %s (was %s)" ;;
-      fin_done) _T="Done. Open %s in your project and ask: \"Sam, what should I build on Arc?\"" ;;
+      fin_done) _T="Done. Open %s in your project and ask: \"Tim, what should I build on Arc?\"" ;;
       fin_host_both) _T="Claude Code or Codex" ;;
-      fin_next) _T="Your team: Tim (architect) · Bobbilee (PM) · Sam (analyst) · Joshua (UX) · Pedro (dev) · Mike (tech writer)" ;;
+      fin_next) _T="Your team: Sam (architect) · Bobbilee (PM) · Tim (analyst) · Joshua (UX) · Pedro (dev) · Mike (tech writer)" ;;
       fin_reload) _T="In a Claude Code session that is already open, run /reload-plugins." ;;
       fin_circle_paid) _T="Some Circle skills can lead to paid services (%s); review them in /plugin." ;;
       fin_sandbox) _T="Sandboxed session:\n  %s\n  %s" ;;
@@ -680,9 +680,9 @@ Ambiente:
       guard_codex_trust) _T="  Codex: abra /hooks no Codex e marque os hooks do stable-build como confiáveis; o Codex ignora hooks de plugins até você fazer isso." ;;
       # linhas finais
       ver_was) _T=" %s (antes: %s)" ;;
-      fin_done) _T="Concluído. Abra o %s no seu projeto e pergunte: \"Sam, o que eu construo na Arc?\"" ;;
+      fin_done) _T="Concluído. Abra o %s no seu projeto e pergunte: \"Tim, o que eu construo na Arc?\"" ;;
       fin_host_both) _T="Claude Code ou o Codex" ;;
-      fin_next) _T="Seu time: Tim (arquiteto) · Bobbilee (PM) · Sam (analista) · Joshua (UX) · Pedro (dev) · Mike (tech writer)" ;;
+      fin_next) _T="Seu time: Sam (arquiteto) · Bobbilee (PM) · Tim (analista) · Joshua (UX) · Pedro (dev) · Mike (tech writer)" ;;
       fin_reload) _T="Numa sessão do Claude Code que já está aberta, rode /reload-plugins." ;;
       fin_circle_paid) _T="Algumas skills da Circle podem levar a serviços pagos (%s); revise-as em /plugin." ;;
       fin_sandbox) _T="Sessão no sandbox:\n  %s\n  %s" ;;
