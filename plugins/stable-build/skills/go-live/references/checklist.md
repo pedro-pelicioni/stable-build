@@ -170,7 +170,7 @@ rpc() { curl -s -X POST -H 'content-type: application/json' \
   - the app does not claim to be official, partnered with, endorsed by or backed by Arc or Circle;
   - Arc marks are used only per the Arc Brand Kit;
   - no yield, APR, ROI or "guaranteed" wording;
-  - for each open program in `../../data/programs.json`, the stated requirements are met (Microgrants: deployed and working on Arc mainnet, public repo, before the deadline).
+  - for each open program in `../../data/programs.json`, the stated requirements are met (Microgrants round 2, Built with Arc Studio: contracts written and tested in Arc Studio and deployed on Arc mainnet, a Studio-built app at a public link, at least one mainnet USDC transfer through the contract and app, public repo, Studio project link, contract address and tx hash on explorer.arc.io, and a demo video, before the deadline). Round 1 is closed for applications.
 - **Evidence:**
   ```sh
   g -i 'official (arc|circle)|partner(ed)? with (arc|circle)|endorsed by|(arc|circle)[- ]backed|backed by (arc|circle)'
