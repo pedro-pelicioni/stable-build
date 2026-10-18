@@ -24,6 +24,11 @@ tmp/
 .vscode/
 *.swp
 
+# Foundry output for contracts/go-live-registry
+contracts/go-live-registry/out/
+contracts/go-live-registry/cache/
+contracts/go-live-registry/broadcast/
+
 # Local agent settings
 .claude/settings.local.json
 CLAUDE.local.md
