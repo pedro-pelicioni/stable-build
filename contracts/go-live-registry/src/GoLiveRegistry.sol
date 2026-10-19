@@ -27,7 +27,7 @@ contract GoLiveRegistry {
         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
     );
     bytes32 public constant REGISTRATION_TYPEHASH = keccak256(
-        "Registration(address project,uint256 chainId,bytes32 reportHash,uint16 gates,uint64 expiry,uint256 nonce)"
+        "Registration(address project,uint256 chainId,bytes32 reportHash,uint16 gates,uint64 expiry,uint256 nonce,uint256 fee)"
     );
     bytes32 public constant NAME_HASH = keccak256(bytes(NAME));
     bytes32 public constant VERSION_HASH = keccak256(bytes(VERSION));
@@ -55,7 +55,6 @@ contract GoLiveRegistry {
     uint256 public fee;
 
     mapping(bytes32 digest => bool used) public usedDigest;
-    mapping(uint256 nonce => bool used) public usedNonce;
     mapping(address project => Badge badge) private _badges;
     mapping(address project => uint256 indexPlusOne) private _indexPlusOne;
     address[] private _projects;
@@ -71,7 +70,7 @@ contract GoLiveRegistry {
     error EmptyReport();
     error BadSignature();
     error Replay(bytes32 digest);
-    error NonceUsed(uint256 nonce);
+    error FeeMismatch(uint256 signedFee, uint256 fee);
     error NotVerifier(address signer);
     error FeeTransferFailed();
     error NativeValueRejected();
@@ -153,13 +152,17 @@ contract GoLiveRegistry {
         treasury = newTreasury;
     }
 
-    /// @notice Record a badge for `project`. The caller pays `fee` USDC (6 decimals) to `treasury`.
+    /// @notice Record a badge for `project`. The caller pays `signedFee` USDC (6 decimals) to `treasury`.
     /// @param chainId Must equal `block.chainid`. It is also part of the signed struct.
     /// @param reportHash `keccak256` of the exact bytes of `docs/go-live-report.md` (or of the
     ///        evidence JSON, if that is what the signer hashed).
     /// @param gates Bits 0..13. Bit 0 is G1. At least one bit must be set. No higher bit may be set.
     /// @param expiry Unix time. The signature is rejected when `block.timestamp` is greater.
-    /// @param nonce Single-use. A later report for the same project needs a new nonce and signature.
+    /// @param nonce Distinguishes this payload. It is not a global counter: replay protection is
+    ///        `usedDigest`. The same nonce may be signed again when any other signed field changes,
+    ///        including for a different project.
+    /// @param signedFee 6-decimal base units. Must equal the stored `fee`. A later `setFee` makes
+    ///        this signature revert until the stored fee matches again, or the verifier signs the new fee.
     /// @param signature 65 bytes, `r || s || v`, low `s`, `v` in {27, 28} (0 and 1 are accepted).
     function register(
         address project,
@@ -168,6 +171,7 @@ contract GoLiveRegistry {
         uint16 gates,
         uint64 expiry,
         uint256 nonce,
+        uint256 signedFee,
         bytes calldata signature
     ) external returns (bytes32 digest) {
         if (chainId != block.chainid) revert WrongChain(chainId, block.chainid);
@@ -176,16 +180,19 @@ contract GoLiveRegistry {
         if (block.timestamp > expiry) revert Expired(expiry, block.timestamp);
         if (project.code.length == 0) revert NoCode(project);
 
-        digest = hashRegistration(address(this), block.chainid, project, chainId, reportHash, gates, expiry, nonce);
+        digest = hashRegistration(
+            address(this), block.chainid, project, chainId, reportHash, gates, expiry, nonce, signedFee
+        );
         if (usedDigest[digest]) revert Replay(digest);
-        if (usedNonce[nonce]) revert NonceUsed(nonce);
 
         address signer = recoverSigner(digest, signature);
         if (signer != verifier) revert NotVerifier(signer);
+        // Exact match, not a cap: the charged amount is the signed amount. Checked after the
+        // signature and before effects, so a fee change does not burn the digest or pull a new price.
+        if (signedFee != fee) revert FeeMismatch(signedFee, fee);
 
-        // Effects before the token call. A token that called back could not reuse this digest or nonce.
+        // Effects before the token call. A token that called back could not reuse this digest.
         usedDigest[digest] = true;
-        usedNonce[nonce] = true;
         _badges[project] = Badge({
             project: project,
             chainId: chainId,
@@ -201,10 +208,9 @@ contract GoLiveRegistry {
             _indexPlusOne[project] = _projects.length;
         }
 
-        uint256 price = fee;
-        if (price != 0) _pullFee(msg.sender, price);
+        if (signedFee != 0) _pullFee(msg.sender, signedFee);
 
-        emit Registered(project, msg.sender, reportHash, gates, expiry, nonce, price);
+        emit Registered(project, msg.sender, reportHash, gates, expiry, nonce, signedFee);
     }
 
     function badgeOf(address project) external view returns (Badge memory) {
@@ -246,7 +252,8 @@ contract GoLiveRegistry {
         bytes32 reportHash,
         uint16 gates,
         uint64 expiry,
-        uint256 nonce
+        uint256 nonce,
+        uint256 signedFee
     ) public pure returns (bytes32) {
         bytes32 domainSeparator = keccak256(
             abi.encode(DOMAIN_TYPEHASH, NAME_HASH, VERSION_HASH, domainChainId, verifyingContract)
@@ -259,7 +266,8 @@ contract GoLiveRegistry {
                 reportHash,
                 uint256(gates),
                 uint256(expiry),
-                nonce
+                nonce,
+                signedFee
             )
         );
         return keccak256(abi.encodePacked(bytes2(0x1901), domainSeparator, structHash));

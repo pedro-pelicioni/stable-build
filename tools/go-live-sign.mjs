@@ -30,13 +30,13 @@ export const MAX_FEE = 10_000_000n;
 export const GATE_COUNT = 14;
 export const DOMAIN_TYPE = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
 export const REGISTRATION_TYPE =
-  "Registration(address project,uint256 chainId,bytes32 reportHash,uint16 gates,uint64 expiry,uint256 nonce)";
+  "Registration(address project,uint256 chainId,bytes32 reportHash,uint16 gates,uint64 expiry,uint256 nonce,uint256 fee)";
 
 const DOMAIN_TYPEHASH = keccak256(DOMAIN_TYPE);
 const REGISTRATION_TYPEHASH = keccak256(REGISTRATION_TYPE);
 const NAME_HASH = keccak256(REGISTRY_NAME);
 const VERSION_HASH = keccak256(REGISTRY_VERSION);
-const REGISTER_SELECTOR = keccak256("register(address,uint256,bytes32,uint16,uint64,uint256,bytes)").subarray(0, 4);
+const REGISTER_SELECTOR = keccak256("register(address,uint256,bytes32,uint16,uint64,uint256,uint256,bytes)").subarray(0, 4);
 const APPROVE_SELECTOR = keccak256("approve(address,uint256)").subarray(0, 4);
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -48,7 +48,8 @@ export function keccak256Hex(input) {
 }
 
 /**
- * EIP-712 digest. `gates` and `expiry` are encoded as uint256, matching abi.encode.
+ * EIP-712 digest. `gates`, `expiry` and `fee` are encoded as uint256, matching abi.encode.
+ * `fee` is 6-decimal base units and must equal the registry's stored fee at call time.
  * @param {object} p
  */
 export function hashRegistration(p) {
@@ -70,6 +71,7 @@ export function hashRegistration(p) {
       word(BigInt(p.gates)),
       word(BigInt(p.expiry)),
       word(BigInt(p.nonce)),
+      word(BigInt(p.fee)),
     ]),
   );
   return keccak256(concat([Buffer.from([0x19, 0x01]), domainSeparator, structHash]));
@@ -131,7 +133,8 @@ export function encodeRegisterCall(message, signatureHex) {
     word(BigInt(message.gates)),
     word(BigInt(message.expiry)),
     word(BigInt(message.nonce)),
-    word(224n),
+    word(BigInt(message.fee)),
+    word(256n),
   ];
   const padded = Buffer.concat([sig, Buffer.alloc((32 - (sig.length % 32)) % 32)]);
   return bytesToHex(concat([REGISTER_SELECTOR, ...head, word(BigInt(sig.length)), padded]));
@@ -168,6 +171,7 @@ export function buildPayload({
     gates: String(gates),
     expiry: String(expiry),
     nonce: String(nonce),
+    fee: String(fee),
   };
   const digest = hashRegistration({
     verifyingContract: registry,
@@ -178,6 +182,7 @@ export function buildPayload({
     gates,
     expiry,
     nonce,
+    fee,
   });
   const blocked = [];
   if (!allowPartial && problems.length) blocked.push(...problems);
@@ -231,7 +236,7 @@ export function buildPayload({
     value: "0",
   };
   payload.note =
-    "Approve `fee` base units (6 decimals) on the USDC ERC-20, then send `register`. Do not attach native value.";
+    "Approve `fee` base units (6 decimals) on the USDC ERC-20, then send `register`. The signed fee must equal the registry's stored fee or the call reverts. Do not attach native value.";
   return payload;
 }
 

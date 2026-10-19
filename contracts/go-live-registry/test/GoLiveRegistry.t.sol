@@ -84,7 +84,7 @@ contract GoLiveRegistryTest {
         vm.expectEmit(true, true, true, true);
         emit Registered(project, registrant, report, ALL_GATES, expiry, 1, FEE);
         vm.prank(registrant);
-        bytes32 digest = reg.register(project, block.chainid, report, ALL_GATES, expiry, 1, signature);
+        bytes32 digest = reg.register(project, block.chainid, report, ALL_GATES, expiry, 1, FEE, signature);
 
         GoLiveRegistry.Badge memory b = reg.badgeOf(project);
         if (b.project != project) revert EqA(b.project, project);
@@ -101,7 +101,6 @@ contract GoLiveRegistryTest {
         if (usdc.decimals() != 6) revert EqU(usdc.decimals(), 6);
         if (address(reg).balance != 0) revert EqU(address(reg).balance, 0);
         if (!reg.usedDigest(digest)) revert EqU(1, 0);
-        if (!reg.usedNonce(1)) revert EqU(1, 0);
 
         GoLiveRegistry.Badge[] memory page = reg.list(0, 10);
         if (page.length != 1) revert EqU(page.length, 1);
@@ -116,7 +115,7 @@ contract GoLiveRegistryTest {
         _fund(registrant, 20_000);
         bytes memory signature = _sign(project, report, ALL_GATES, expiry, 7);
         vm.prank(registrant);
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 7, signature);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 7, 20_000, signature);
         if (usdc.decimals() != 6) revert EqU(usdc.decimals(), 6);
         if (usdc.balanceOf(treasury) != 20_000) revert EqU(usdc.balanceOf(treasury), 20_000);
     }
@@ -126,11 +125,11 @@ contract GoLiveRegistryTest {
         bytes32 report = keccak256("bad-signer");
         uint64 expiry = uint64(NOW + 1 days);
         _fund(registrant, FEE);
-        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, ALL_GATES, expiry, 2);
+        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, ALL_GATES, expiry, 2, FEE);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(other, digest);
         vm.prank(registrant);
         vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.NotVerifier.selector, vm.addr(other)));
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 2, abi.encodePacked(r, s, v));
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 2, FEE, abi.encodePacked(r, s, v));
     }
 
     function test_expired() public {
@@ -141,31 +140,40 @@ contract GoLiveRegistryTest {
         _fund(registrant, FEE);
         vm.prank(registrant);
         vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.Expired.selector, expiry, expiry + 1));
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 3, signature);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 3, FEE, signature);
 
         // The deadline second itself is still accepted.
         vm.warp(expiry);
         vm.prank(registrant);
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 3, signature);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 3, FEE, signature);
         if (reg.badgeOf(project).expiry != expiry) revert EqU(reg.badgeOf(project).expiry, expiry);
     }
 
-    function test_replayAndNonceReuse() public {
+    function test_replayIsTheDigestAndNonceIsNotGlobal() public {
         bytes32 report = keccak256("once");
         uint64 expiry = uint64(NOW + 1 days);
         bytes memory signature = _sign(project, report, ALL_GATES, expiry, 4);
-        _fund(registrant, FEE * 2);
+        _fund(registrant, FEE * 3);
         vm.prank(registrant);
-        bytes32 digest = reg.register(project, block.chainid, report, ALL_GATES, expiry, 4, signature);
+        bytes32 digest = reg.register(project, block.chainid, report, ALL_GATES, expiry, 4, FEE, signature);
         vm.prank(registrant);
         vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.Replay.selector, digest));
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 4, signature);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 4, FEE, signature);
 
+        // The same nonce on another project is a different digest.
+        address other = address(new DemoProject());
+        bytes memory otherSig = _sign(other, report, ALL_GATES, expiry, 4);
+        vm.prank(registrant);
+        reg.register(other, block.chainid, report, ALL_GATES, expiry, 4, FEE, otherSig);
+        if (reg.badgeOf(other).nonce != 4) revert EqU(reg.badgeOf(other).nonce, 4);
+
+        // The same nonce on this project with a new report is also a new digest.
         bytes32 report2 = keccak256("twice");
         bytes memory signature2 = _sign(project, report2, ALL_GATES, expiry, 4);
         vm.prank(registrant);
-        vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.NonceUsed.selector, uint256(4)));
-        reg.register(project, block.chainid, report2, ALL_GATES, expiry, 4, signature2);
+        reg.register(project, block.chainid, report2, ALL_GATES, expiry, 4, FEE, signature2);
+        if (reg.badgeOf(project).reportHash != report2) revert EqB(reg.badgeOf(project).reportHash, report2);
+        if (reg.projectCount() != 2) revert EqU(reg.projectCount(), 2);
     }
 
     function test_reregisterUpdatesInPlace() public {
@@ -174,16 +182,16 @@ contract GoLiveRegistryTest {
         bytes32 first = keccak256("first");
         bytes memory sigFirst = _sign(project, first, ALL_GATES, expiry, 5);
         vm.prank(registrant);
-        reg.register(project, block.chainid, first, ALL_GATES, expiry, 5, sigFirst);
+        reg.register(project, block.chainid, first, ALL_GATES, expiry, 5, FEE, sigFirst);
         address second = address(new DemoProject());
         bytes32 next = keccak256("second");
         bytes memory sigNext = _sign(second, next, 1, expiry, 6);
         vm.prank(registrant);
-        reg.register(second, block.chainid, next, 1, expiry, 6, sigNext);
+        reg.register(second, block.chainid, next, 1, expiry, 6, FEE, sigNext);
         bytes32 updated = keccak256("updated");
         bytes memory sigUpdated = _sign(project, updated, 3, expiry, 8);
         vm.prank(registrant);
-        reg.register(project, block.chainid, updated, 3, expiry, 8, sigUpdated);
+        reg.register(project, block.chainid, updated, 3, expiry, 8, FEE, sigUpdated);
         if (reg.projectCount() != 2) revert EqU(reg.projectCount(), 2);
         if (reg.badgeOf(project).reportHash != updated) revert EqB(reg.badgeOf(project).reportHash, updated);
         if (reg.list(0, 50).length != 2) revert EqU(reg.list(0, 50).length, 2);
@@ -194,13 +202,13 @@ contract GoLiveRegistryTest {
         bytes32 report = keccak256("chain");
         uint64 expiry = uint64(NOW + 1 days);
         uint256 wrong = 5042002;
-        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, wrong, report, ALL_GATES, expiry, 9);
+        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, wrong, report, ALL_GATES, expiry, 9, FEE);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ANVIL_TEST_KEY, digest);
         _fund(registrant, FEE);
         vm.prank(registrant);
         vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.WrongChain.selector, wrong, block.chainid));
-        reg.register(project, wrong, report, ALL_GATES, expiry, 9, abi.encodePacked(r, s, v));
-        if (reg.usedNonce(9)) revert EqU(1, 0);
+        reg.register(project, wrong, report, ALL_GATES, expiry, 9, FEE, abi.encodePacked(r, s, v));
+        if (reg.usedDigest(digest)) revert EqU(1, 0);
     }
 
     function test_noCode() public {
@@ -211,7 +219,7 @@ contract GoLiveRegistryTest {
         _fund(registrant, FEE);
         vm.prank(registrant);
         vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.NoCode.selector, empty));
-        reg.register(empty, block.chainid, report, ALL_GATES, expiry, 10, signature);
+        reg.register(empty, block.chainid, report, ALL_GATES, expiry, 10, FEE, signature);
     }
 
     function test_insufficientAllowanceAndBalanceAndFalseReturn() public {
@@ -225,7 +233,7 @@ contract GoLiveRegistryTest {
         vm.expectRevert(
             abi.encodeWithSelector(MockUSDC.InsufficientAllowance.selector, registrant, address(reg), FEE - 1, FEE)
         );
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 11, signature);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 11, FEE, signature);
 
         vm.prank(registrant);
         usdc.approve(address(reg), FEE);
@@ -237,13 +245,14 @@ contract GoLiveRegistryTest {
         usdc.approve(address(reg), FEE);
         vm.prank(poor);
         vm.expectRevert(abi.encodeWithSelector(MockUSDC.InsufficientBalance.selector, poor, uint256(0), FEE));
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 11, signature);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 11, FEE, signature);
 
         usdc.setReturnFalse(true);
         vm.prank(registrant);
         vm.expectRevert(GoLiveRegistry.FeeTransferFailed.selector);
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 11, signature);
-        if (reg.usedNonce(11)) revert EqU(1, 0);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 11, FEE, signature);
+        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, ALL_GATES, expiry, 11, FEE);
+        if (reg.usedDigest(digest)) revert EqU(1, 0);
     }
 
     function test_feeChangeVerifierRotationAndTreasury() public {
@@ -267,13 +276,13 @@ contract GoLiveRegistryTest {
         bytes memory stale = _sign(project, report, ALL_GATES, expiry, 12);
         vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.NotVerifier.selector, verifier));
         vm.prank(registrant);
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 12, stale);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 12, 1, stale);
 
-        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, ALL_GATES, expiry, 12);
+        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, ALL_GATES, expiry, 12, 1);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(uint256(keccak256("next")), digest);
         bytes memory fresh = abi.encodePacked(r, s, v);
         vm.prank(registrant);
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 12, fresh);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 12, 1, fresh);
         if (usdc.balanceOf(nextTreasury) != 1) revert EqU(usdc.balanceOf(nextTreasury), 1);
         if (usdc.balanceOf(treasury) != 0) revert EqU(usdc.balanceOf(treasury), 0);
     }
@@ -296,43 +305,71 @@ contract GoLiveRegistryTest {
         uint64 expiry = uint64(NOW + 1 days);
         bytes memory signature = _sign(project, report, 1, expiry, 13);
         vm.prank(registrant);
-        reg.register(project, block.chainid, report, 1, expiry, 13, signature);
+        reg.register(project, block.chainid, report, 1, expiry, 13, 0, signature);
         if (usdc.balanceOf(treasury) != 0) revert EqU(usdc.balanceOf(treasury), 0);
         if (!reg.hasBadge(project)) revert EqU(1, 0);
     }
 
-    function test_rejectsBadInputsMalleabilityAndNativeValue() public {
+    function test_rejectsEmptyReportAndBadGates() public {
         uint64 expiry = uint64(NOW + 1 days);
         bytes32 report = keccak256("bad");
         _fund(registrant, FEE);
         bytes memory ignored = _sign(project, report, ALL_GATES, expiry, 14);
 
         vm.expectRevert(GoLiveRegistry.EmptyReport.selector);
-        reg.register(project, block.chainid, bytes32(0), ALL_GATES, expiry, 14, ignored);
+        reg.register(project, block.chainid, bytes32(0), ALL_GATES, expiry, 14, FEE, ignored);
 
         vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.BadGates.selector, uint16(0)));
-        reg.register(project, block.chainid, report, 0, expiry, 14, ignored);
+        reg.register(project, block.chainid, report, 0, expiry, 14, FEE, ignored);
 
         vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.BadGates.selector, uint16(1 << 14)));
-        reg.register(project, block.chainid, report, uint16(1 << 14), expiry, 14, ignored);
+        reg.register(project, block.chainid, report, uint16(1 << 14), expiry, 14, FEE, ignored);
+    }
 
+    function test_signedFeeMustEqualStoredFee() public {
+        bytes32 report = keccak256("fee-lock");
+        uint64 expiry = uint64(NOW + 1 days);
+        bytes memory signature = _sign(project, report, ALL_GATES, expiry, 16);
+        _fund(registrant, FEE);
+        uint256 raised = FEE + 1;
+        reg.setFee(raised);
+        vm.prank(registrant);
+        vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.FeeMismatch.selector, FEE, raised));
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 16, FEE, signature);
+        if (usdc.balanceOf(treasury) != 0) revert EqU(usdc.balanceOf(treasury), 0);
+
+        // A lower stored fee is also a mismatch. This is not a maximum the owner can undercut.
+        uint256 lowered = FEE - 1;
+        reg.setFee(lowered);
+        vm.prank(registrant);
+        vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.FeeMismatch.selector, FEE, lowered));
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 16, FEE, signature);
+
+        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, ALL_GATES, expiry, 16, FEE);
+        if (reg.usedDigest(digest)) revert EqU(1, 0);
+
+        // The original signature works again when the stored fee is the signed fee.
+        reg.setFee(FEE);
+        vm.prank(registrant);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 16, FEE, signature);
+        if (usdc.balanceOf(treasury) != FEE) revert EqU(usdc.balanceOf(treasury), FEE);
     }
 
     function test_rejectsMalleableSignatureAndAcceptsShortV() public {
         uint64 expiry = uint64(NOW + 1 days);
         bytes32 report = keccak256("malleable");
         _fund(registrant, FEE);
-        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, ALL_GATES, expiry, 15);
+        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, ALL_GATES, expiry, 15, FEE);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ANVIL_TEST_KEY, digest);
         uint256 curveN = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
         bytes memory high = abi.encodePacked(r, bytes32(curveN - uint256(s)), v == 27 ? bytes1(0x1c) : bytes1(0x1b));
         vm.expectRevert(GoLiveRegistry.BadSignature.selector);
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 15, high);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 15, FEE, high);
 
         // v of 0 or 1 is the same recovery id as 27 or 28.
         bytes memory low = abi.encodePacked(r, s, bytes1(v - 27));
         vm.prank(registrant);
-        reg.register(project, block.chainid, report, ALL_GATES, expiry, 15, low);
+        reg.register(project, block.chainid, report, ALL_GATES, expiry, 15, FEE, low);
         if (!reg.hasBadge(project)) revert EqU(1, 0);
     }
 
@@ -366,12 +403,13 @@ contract GoLiveRegistryTest {
         uint16 gates = uint16(vm.parseJsonUint(json, ".gates"));
         uint64 expiry = uint64(vm.parseJsonUint(json, ".expiry"));
         uint256 nonce = vm.parseJsonUint(json, ".nonce");
+        uint256 vectorFee = vm.parseJsonUint(json, ".fee");
         bytes32 expected = vm.parseJsonBytes32(json, ".digest");
         bytes memory signature = vm.parseJsonBytes(json, ".signature");
         address expectedSigner = vm.parseJsonAddress(json, ".verifier");
 
         bytes32 digest = reg.hashRegistration(
-            verifying, domainChainId, vectorProject, chainId, reportHash, gates, expiry, nonce
+            verifying, domainChainId, vectorProject, chainId, reportHash, gates, expiry, nonce, vectorFee
         );
         if (digest != expected) revert EqB(digest, expected);
         if (reg.recoverSigner(digest, signature) != expectedSigner) {
@@ -407,7 +445,7 @@ contract GoLiveRegistryTest {
         view
         returns (bytes memory)
     {
-        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, proj, block.chainid, report, gates, expiry, nonce);
+        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, proj, block.chainid, report, gates, expiry, nonce, reg.fee());
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ANVIL_TEST_KEY, digest);
         return abi.encodePacked(r, s, v);
     }

@@ -71,11 +71,11 @@ contract ArcForkTest {
 
         bytes32 report = keccak256("fork-report");
         uint64 expiry = uint64(block.timestamp + 1 days);
-        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, 1, expiry, 1);
+        bytes32 digest = reg.hashRegistration(address(reg), block.chainid, project, block.chainid, report, 1, expiry, 1, 10_000);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ANVIL_TEST_KEY, digest);
         uint256 beforeTreasury = IUsdcView(USDC).balanceOf(treasury);
         vm.prank(registrant);
-        reg.register(project, block.chainid, report, 1, expiry, 1, abi.encodePacked(r, s, v));
+        reg.register(project, block.chainid, report, 1, expiry, 1, 10_000, abi.encodePacked(r, s, v));
         uint256 afterTreasury = IUsdcView(USDC).balanceOf(treasury);
         if (afterTreasury - beforeTreasury != 10_000) revert ForkAssert(afterTreasury - beforeTreasury, 10_000);
         if (!reg.hasBadge(project)) revert ForkAssert(0, 1);

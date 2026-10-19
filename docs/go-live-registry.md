@@ -1,6 +1,6 @@
 # Go-live registry
 
-A project that passes stable-build's 14 go-live gates can record a badge on Arc. The badge is a row in `GoLiveRegistry`. Anyone can recompute the EIP-712 digest from the project address, the chain id, the report hash, the gate bitmap, the expiry and the nonce, and check that the configured verifier signed it.
+A project that passes stable-build's 14 go-live gates can record a badge on Arc. The badge is a row in `GoLiveRegistry`. Anyone can recompute the EIP-712 digest from the project address, the chain id, the report hash, the gate bitmap, the expiry, the nonce and the fee, and check that the configured verifier signed it.
 
 This repository does not deploy the contract, does not sign with a real key, and does not send USDC. Those steps are for the owner, on a machine they control. The go-live skill still never signs or broadcasts.
 
@@ -36,9 +36,10 @@ Arc Studio deploys to testnet only. Mainnet is `arc-forge` with a key you hold. 
 | `expiry` | `uint64` | Unix time. The signature is rejected when `block.timestamp` is greater than this. Equal is accepted. |
 | `registeredAt` | `uint64` | `block.timestamp` at the successful call. |
 | `registrant` | `address` | `msg.sender` of that call. The signature does not bind the caller. |
-| `nonce` | `uint256` | Single-use across the registry. A new report for the same project needs a new nonce. |
+| `nonce` | `uint256` | Part of the signed payload. It is not a global counter. The same nonce may be used for another project, or again for this project when another signed field changes. |
+| `fee` | `uint256` | 6-decimal base units signed by the verifier. `register` pulls this amount only when it equals the stored fee. |
 
-A second successful `register` for the same project overwrites the badge and keeps the listing index. `usedDigest` and `usedNonce` stay set, so the old signature cannot be replayed.
+A second successful `register` for the same project overwrites the badge and keeps the listing index. `usedDigest` stays set, so that exact payload cannot be replayed. There is no global nonce set: nonce 1 on one project does not block nonce 1 on another.
 
 Views: `badgeOf(project)`, `hasBadge(project)`, `projectCount()`, `projectAt(index)`, `list(offset, limit)`. `list` caps `limit` at 50.
 
@@ -53,7 +54,7 @@ version = "1"
 chainId = block.chainid of the registry
 verifyingContract = the registry address
 
-Registration(address project,uint256 chainId,bytes32 reportHash,uint16 gates,uint64 expiry,uint256 nonce)
+Registration(address project,uint256 chainId,bytes32 reportHash,uint16 gates,uint64 expiry,uint256 nonce,uint256 fee)
 ```
 
 ```text
@@ -79,7 +80,7 @@ The fee is an ERC-20 amount on the USDC interface at `0x360000000000000000000000
 | Maximum the owner may set | `10000000` | 10 |
 | Zero | `0` | no pull |
 
-`register` calls `transferFrom(msg.sender, treasury, fee)` on that address. A revert from the token (allowance, balance, blocklist) is rethrown. A `false` return without a revert is `FeeTransferFailed`. Fee `0` skips the call.
+`register` calls `transferFrom(msg.sender, treasury, signedFee)` on that address. `signedFee` is a calldata argument and a field of the signed struct. The call reverts with `FeeMismatch` unless `signedFee` equals the stored `fee`, whether the owner raised that fee or lowered it. That is an exact match, not a cap: a cap would still charge a different amount from the one the verifier signed. A `setFee` after signing makes the outstanding signature revert and does not burn its digest. The signature works again if the stored fee returns to the signed value, or the verifier signs the new fee. A revert from the token (allowance, balance, blocklist) is rethrown. A `false` return without a revert is `FeeTransferFailed`. Fee `0` skips the pull.
 
 Native value is refused. `receive` and `fallback` revert with `NativeValueRejected`. There is no path that reads `msg.value`. Arc's native USDC view is 18 decimals and is the same balance as the ERC-20 view. Do not add the two, and do not pass an 18-decimal amount to `approve` or `transferFrom`.
 
@@ -93,8 +94,8 @@ The owner is set in the constructor and moves with two steps: `transferOwnership
 
 The owner can:
 
-- `setVerifier(address)` — the next signature must come from this address. Signatures that were already valid for unused nonces stay valid until they expire or are used. Rotate the key and use a short expiry when you rotate.
-- `setFee(uint256)` — 6-decimal base units, at most `MAX_FEE`.
+- `setVerifier(address)` — the next signature must come from this address. Signatures that were already valid stay valid until they expire or are used, as long as the stored fee is still the signed fee. Rotate the key and use a short expiry when you rotate.
+- `setFee(uint256)` — 6-decimal base units, at most `MAX_FEE`. Outstanding signatures revert with `FeeMismatch` until they are signed again for the new fee.
 - `setTreasury(address)` — later fees go here. Past fees are already in the previous treasury.
 
 Events: `OwnershipTransferStarted`, `OwnershipTransferred`, `VerifierSet`, `FeeSet`, `TreasurySet`, `Registered`.
@@ -105,18 +106,19 @@ The chain checks the signature, the code size, the expiry, the nonce, the digest
 
 | Risk | What the contract does |
 |---|---|
-| Replay of the same signature | `usedDigest` and `usedNonce` |
+| Replay of the same signature | `usedDigest`. The nonce is inside that digest. It is not tracked on its own. |
 | Replay on another chain or another registry | Domain chain id and verifying contract, plus `chainId == block.chainid` |
 | Malleable `s` | Rejected before `ecrecover` |
 | EOA or empty address as the project | `project.code.length == 0` reverts with `NoCode` |
 | Expired signature | `block.timestamp > expiry` |
 | Caller is not the sponsor | Allowed. `registrant` is whoever pays. The badge is about `project`. |
 | Verifier key copied | Owner calls `setVerifier`. Old unused signatures still work until expiry or use. |
-| Owner key copied | Owner can change the verifier, the fee (up to 10 USDC) and the treasury. The contract has no USDC balance to take. |
+| Owner raises or lowers the fee after signing | `FeeMismatch`. The call does not pull the new fee and does not consume the digest. |
+| Owner key copied | Owner can change the verifier, the fee (up to 10 USDC) and the treasury. Changing the fee invalidates outstanding signatures. The contract has no USDC balance to take. |
 | Fee token swapped for a fake | The USDC address is a constant, not a parameter. |
 | Reentrancy from the token | Digest, nonce and badge are written before `transferFrom`. |
 | Native USDC mixed with the 6-decimal fee | No payable success path. |
-| Front-run of a pending registration | The first successful caller consumes the nonce and pays the fee. |
+| Front-run of a pending registration | The first successful caller consumes the digest and pays the signed fee. |
 
 `n/a` does not set a bit. The signer refuses to sign when any gate is missing, `fail` or `unknown`, or when no gate passed, unless you pass `--allow-partial`. `--allow-partial` means you accept a badge whose bitmap is not a full pass. Say that in the submission if you use it.
 
@@ -159,7 +161,7 @@ bash script/install-arc-foundry.sh "$HOME/.local/bin"
 
 The tag defaults to `v0.8.0-2` (`STABLE_BUILD_FOUNDRY_TAG` overrides it). The script checks the release `.sha256` before it copies `arc-forge`, `arc-cast` and `arc-anvil`.
 
-Unit tests use a mock ERC-20 etched at the USDC address. They cover the happy path, a bad signer, expiry, replay, a reused nonce, an in-place re-registration, the wrong chain id, an address with no code, allowance and balance failures, a `false` return, fee and verifier and treasury changes, owner gates, a zero fee, empty and out-of-range bitmaps, a malleable signature, a short `v`, native value, two-step ownership, and the shared vector.
+Unit tests use a mock ERC-20 etched at the USDC address. They cover the happy path, a bad signer, expiry, replay of the same digest, the same nonce on another project, an in-place re-registration, the wrong chain id, an address with no code, allowance and balance failures, a `false` return, a stored fee that no longer equals the signed fee, fee and verifier and treasury changes, owner gates, a zero fee, an empty report, out-of-range bitmaps, a malleable signature, a short `v`, native value, two-step ownership, and the shared vector.
 
 The fork tests run only when `ARC_MAINNET_RPC` is set. They are skipped in CI.
 

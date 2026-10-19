@@ -54,6 +54,7 @@ describe("keccak and the shared registration vector", () => {
       gates: BigInt(VECTOR.gates),
       expiry: BigInt(VECTOR.expiry),
       nonce: BigInt(VECTOR.nonce),
+      fee: BigInt(VECTOR.fee),
     });
     assert.equal(keccak256Hex(VECTOR.preimage), VECTOR.reportHash);
     assert.equal("0x" + Buffer.from(digest).toString("hex"), VECTOR.digest);
@@ -85,12 +86,16 @@ describe("keccak and the shared registration vector", () => {
     assert.equal(payload.approve.value, "0");
     assert.equal(payload.approve.to.toLowerCase(), USDC);
     assert.equal(payload.message.gates, "16383");
+    assert.equal(payload.message.fee, "10000");
     assert.equal(payload.message.reportHash, VECTOR.reportHash);
     assert.ok(!JSON.stringify(payload).includes(ANVIL_TEST_KEY));
     const digest = hexToBytes(payload.digest);
     assert.equal(recoverAddress(digest, hexToBytes(payload.signature)), VECTOR.verifier);
     assert.equal(encodeRegisterCall(payload.message, payload.signature), payload.register.data);
-    assert.equal(payload.register.data.slice(0, 10), keccak256Hex("register(address,uint256,bytes32,uint16,uint64,uint256,bytes)").slice(0, 10));
+    assert.equal(
+      payload.register.data.slice(0, 10),
+      keccak256Hex("register(address,uint256,bytes32,uint16,uint64,uint256,uint256,bytes)").slice(0, 10),
+    );
   });
 });
 
