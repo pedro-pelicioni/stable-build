@@ -10,7 +10,7 @@ Skip any question the user has already answered. If the user wants to skip them 
 | 2 | How much time until it must work? (a weekend, about two weeks, one to three months) | Sets scope; checks whether a program deadline is reachable | About two weeks, part-time |
 | 3 | Who are the users, and where? (for example freelancers in Brazil, exporters in Kenya, AI agents, households) | Grounds the idea in a real payer and payee; local context is an edge in frontier 1 | Small businesses that pay people in two or more countries |
 | 4 | Which RFB frontier pulls you, if any? And how will users sign: browser wallet (EOA), embedded Circle Wallets, passkey smart accounts, or agents? | Frontier focus; the wallet model decides whether Memo and Multicall3From (EOA only) can be used | No frontier preference; browser wallet (EOA) |
-| 5 | What is the goal: a hackathon demo, live on Arc mainnet soon (needed for Microgrants), or a company? | Mainnet goals exclude testnet-only, permissioned and roadmap blocks; company goals bring in Developer Grants and the Builders Fund | Testnet prototype first; mainnet if a program deadline fits |
+| 5 | What is the goal: a hackathon demo, live on Arc mainnet soon and built in Arc Studio (needed for Microgrants round 2), or a company? | Mainnet goals exclude testnet-only, permissioned and roadmap blocks; company goals bring in Developer Grants and the Builders Fund | Testnet prototype first; mainnet if a program deadline fits |
 
 ## How answers become constraints
 
@@ -19,7 +19,7 @@ Skip any question the user has already answered. If the user wants to skip them 
 | Smart accounts or passkeys | No idea may require Memo or Multicall3From from the user's account. They revert when the caller is not an EOA (https://docs.arc.io/arc/concepts/transaction-memos). Use a server-side EOA, or a different design. |
 | Little or no Solidity | Prefer App Kits, Gateway, Nanopayments, Agent Stack and Circle Wallets. Use contracts only from audited templates or sample apps. |
 | A weekend | Keep only ideas where a starter or sample app already covers most of the work. |
-| Mainnet soon | Required blocks must be `live`. Check that the deadline in `programs.json` leaves time for a mainnet deploy, and recommend running `stable-build:go-live` before it. |
+| Mainnet soon | Required blocks must be `live`. Check that the deadline in `programs.json` leaves time for a mainnet deploy, and recommend running `stable-build:go-live` before it. The open Microgrants round also needs the contracts and the app built in Arc Studio, a public repo, and a mainnet USDC transfer through both. |
 | A region | Prefer local-market ideas for it. Whether App Kit Onramp covers that country is not in the data (UNVERIFIED): tell the user to check https://docs.arc.io/app-kit/onramp. |
 | Company | Mention Developer Grants (teams already shipping) and the Builders Fund (deck submission) as possible fits, never as promises. |
 
@@ -53,7 +53,7 @@ Candidate: "Agency payouts with receipts". An agency uploads a CSV and pays its 
 - Frontier 1 / Borderless payroll. Blocks: usdc (live), memo (live), multicall3from (live).
 - Closest: the payouts starter (`stable-build:new-app`).
 - Overlap: check `ecosystem.json` Payments/Fintechs entries and `gh search repos "payroll usdc arc"`. Say how the receipts differ.
-- Program: Microgrants, if it is open in `programs.json` and a mainnet deploy fits in the time left.
+- Program: Microgrants round 2 (Built with Arc Studio), if it is open in `programs.json` and a Studio build plus a mainnet deploy fits in the time left. Round 1 is closed.
 - Score: frontier 5, blocks 5, builder 5, time 5, program 4, overlap 3, user 5, for 32/35.
 
 Write the real output with the template in `../SKILL.md`, and take every date, deadline and status from the data files or from docs checked today. Never copy them from this example.

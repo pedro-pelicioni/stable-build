@@ -69,7 +69,7 @@ For each of the 5 ideas:
 
 For each idea, list the open programs that fit, with the deadline as stored and the number of days left.
 
-- **Microgrants:** the project must be deployed and working on Arc mainnet, with a public repo, before the deadline. Say whether the first-2-hours plan plus the time budget can realistically get there.
+- **Microgrants (Built with Arc Studio):** contracts written and tested in Arc Studio and deployed on Arc mainnet, a Studio-built app at a public link, at least one mainnet USDC transfer through the contract and app, a public repo, the Studio project link (`studio.arc.io/app/<id>`), the contract address and tx hash on explorer.arc.io, and a demo video, all before the deadline. Round 1 is closed for applications. Say whether the first-2-hours plan plus the time budget can realistically get there.
 - **Hackathons:** match on frontier and tags; give the event dates and say when the exact cutoff is unverified.
 - **Developer Grants:** for teams already shipping, with traction or a credible path to it.
 - **Builders Fund:** only for companies; it is a Circle Ventures initiative reached by submitting a deck. Never call it a fund or an investment offer.
