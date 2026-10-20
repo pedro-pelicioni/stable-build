@@ -31,6 +31,7 @@ export const DEFAULT_PATHS = [
   'plugins/stable-build/data',
   'plugins/stable-build-mcp',
   'site',
+  'apps/onboarding',
 ];
 export const GOTCHAS_REL = 'plugins/stable-build/data/gotchas.json';
 // Failures in these files are warnings: they list third-party project sites that come and go.

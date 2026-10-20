@@ -19,7 +19,7 @@ Arc Studio deploys to testnet only. Mainnet is `arc-forge` with a key you hold. 
 
 1. Recreate the contract and the tests in Arc Studio (steps below) and record that session.
 2. Deploy to Arc testnet, then to Arc mainnet, with the scripts in `contracts/go-live-registry/script/`.
-3. Build a small Studio app that calls `register` (or at least `approve` and `register`) against the mainnet address.
+3. Build a Studio app from `apps/onboarding/studio-ui-prompt.md` that calls `approve` and `register` against the deployed address. The reference client in `apps/onboarding` is that flow for local and testnet use. Regenerate the UI in Studio; this folder is not the Studio submission.
 4. Send one real mainnet `register` that pulls a few cents of USDC through the contract.
 5. Publish the app, the Studio URL, the contract address, the transaction hash on https://explorer.arc.io, and the video yourself.
 
@@ -215,7 +215,7 @@ Studio's sandbox is a Vite and Foundry app. Solidity goes under `contracts/`. St
 1. Sign in with `arc-studio login` on your own machine. Do not do that inside an agent session.
 2. Create an app. In the workbench, add the contract, the mock and the tests from `contracts/go-live-registry/`, or ask Studio to implement this document and then diff.
 3. In the Studio terminal, run the test command from the Tests section if `arc-forge` is the binary Studio provides. If the terminal only has upstream Foundry, that run does not count as Arc semantics.
-4. Ask Studio to deploy to Arc testnet and to build a page that shows `badgeOf` and sends `approve` then `register` for `DemoProject`. Keep amounts in 6-decimal base units. The page must not set a native `value` on those calls.
+4. Ask Studio to deploy to Arc testnet and to build the page from `apps/onboarding/studio-ui-prompt.md` (the reference client in `apps/onboarding` is the same flow). The page shows `badgeOf` and sends `approve` then `register`. Keep amounts in 6-decimal base units. The page must not set a native `value` on those calls.
 5. Export or push the Studio project to GitHub. The submission wants the `https://studio.arc.io/app/<id>` URL.
 6. Deploy the same source to mainnet with the Deploy section. Point the Studio app at that address and host the app yourself. Studio does not host apps.
 7. Sign with `tools/go-live-sign.mjs` using your verifier key. Approve `30000` (0.03 USDC) on `0x3600…0000` for the registry, then send `register`. The treasury should be a second address you control so the transfer is visible. Confirm the receipt on https://explorer.arc.io and that `balanceOf` of the treasury increased by `30000`, not by an 18-decimal figure.
@@ -226,7 +226,7 @@ Studio's sandbox is a Vite and Foundry app. Solidity goes under `contracts/`. St
 - Upstream Foundry was not run beside `arc-forge` on this suite. Do not treat a passing upstream run as evidence. Not compared on 2026-10-18.
 - A standing `arc-anvil --network arc` process was not required for these tests and was not started. In-process `arc-forge test --network arc` passed, including the mainnet fork.
 - `https://explorer.arc.io/api/` as the mainnet verifier URL is inferred, not requested.
-- Arc Studio was not opened. Its Foundry binary and the grant's reading of "written in Arc Studio" were not confirmed.
+- Arc Studio was not opened. Its Foundry binary and the grant's reading of "written in Arc Studio" were not confirmed. The reference client in `apps/onboarding` was not run against a deployed registry, and Studio was not asked to generate the page from `apps/onboarding/studio-ui-prompt.md`.
 - EIP-2612 `permit` is not implemented. The demo is `approve` plus `register`.
 - No mainnet deploy and no real USDC transfer have been made from this repository. The mainnet and testnet runs above were simulations.
 - Arc Foundry's mainnet dry-run labeled the gas estimate "ETH" while the testnet dry-run labeled it "USDC" (2026-10-18, v0.8.0-2). The contract does not send native value.

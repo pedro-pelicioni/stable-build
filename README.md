@@ -190,6 +190,12 @@ node tools/go-live-sign.mjs --help
 cd contracts/go-live-registry && arc-forge test --network arc
 ```
 
+The reference client is [`apps/onboarding`](apps/onboarding/README.md). It calls this registry from a browser wallet. The `new-app` starter stays `payouts`: that starter is copied into other projects, and this client belongs next to `GoLiveRegistry`.
+
+```sh
+cd apps/onboarding && npm ci && npm test
+```
+
 ## Uninstall
 
 If you used the installer:
