@@ -13,6 +13,7 @@ interface ForkVm {
     function prank(address) external;
     function startPrank(address) external;
     function stopPrank() external;
+    function expectRevert(bytes calldata) external;
 }
 
 interface IUsdcView {
@@ -79,5 +80,49 @@ contract ArcForkTest {
         uint256 afterTreasury = IUsdcView(USDC).balanceOf(treasury);
         if (afterTreasury - beforeTreasury != 10_000) revert ForkAssert(afterTreasury - beforeTreasury, 10_000);
         if (!reg.hasBadge(project)) revert ForkAssert(0, 1);
+    }
+
+    /// @dev The signed fee is part of the EIP-712 struct. Raising the stored fee after
+    ///      signing reverts with FeeMismatch, moves no USDC, and does not consume the digest.
+    ///      Restoring the stored fee lets that same signature pull exactly 10_000 base units.
+    function testFork_feeMismatchDoesNotPullThenMatchPullsSignedFee() public {
+        address verifier = vm.addr(ANVIL_TEST_KEY);
+        address treasury = address(0xBEEF);
+        address registrant = address(0xCAFE);
+        GoLiveRegistry reg = new GoLiveRegistry(address(this), verifier, treasury, 10_000);
+        address project = address(new DemoProject());
+
+        vm.deal(registrant, 1_000_000_000_000_000_000);
+        vm.startPrank(registrant);
+        IUsdcView(USDC).approve(address(reg), 10_000);
+        vm.stopPrank();
+
+        bytes32 report = keccak256("fork-fee-mismatch");
+        uint64 expiry = uint64(block.timestamp + 1 days);
+        uint256 signedFee = 10_000;
+        bytes32 digest = reg.hashRegistration(
+            address(reg), block.chainid, project, block.chainid, report, 1, expiry, 1, signedFee
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ANVIL_TEST_KEY, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        uint256 raised = 20_000;
+        reg.setFee(raised);
+        uint256 beforeTreasury = IUsdcView(USDC).balanceOf(treasury);
+        vm.prank(registrant);
+        vm.expectRevert(abi.encodeWithSelector(GoLiveRegistry.FeeMismatch.selector, signedFee, raised));
+        reg.register(project, block.chainid, report, 1, expiry, 1, signedFee, signature);
+        if (IUsdcView(USDC).balanceOf(treasury) != beforeTreasury) {
+            revert ForkAssert(IUsdcView(USDC).balanceOf(treasury), beforeTreasury);
+        }
+        if (reg.usedDigest(digest)) revert ForkAssert(1, 0);
+        if (reg.hasBadge(project)) revert ForkAssert(1, 0);
+
+        reg.setFee(signedFee);
+        vm.prank(registrant);
+        reg.register(project, block.chainid, report, 1, expiry, 1, signedFee, signature);
+        uint256 afterTreasury = IUsdcView(USDC).balanceOf(treasury);
+        if (afterTreasury - beforeTreasury != signedFee) revert ForkAssert(afterTreasury - beforeTreasury, signedFee);
+        if (!reg.usedDigest(digest)) revert ForkAssert(0, 1);
     }
 }

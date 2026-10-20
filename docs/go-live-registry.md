@@ -171,6 +171,8 @@ ARC_MAINNET_RPC=https://rpc.mainnet.arc.io arc-forge test --network arc --match-
 
 On 2026-10-18 that command, with Arc Foundry `forge 1.7.1-dev` commit `d497beea7096ff2a8e583c8b307941f24a61b06b` (the v0.8.0-2 build), forked Arc mainnet and passed. The fork reported chain id 5042, code at the USDC address, `decimals() == 6`, and a `register` whose treasury balance increased by exactly `10000` base units. The registrant was funded with the `deal` cheatcode. No transaction was broadcast and no real USDC moved.
 
+On 2026-10-20 the same command was run again with that v0.8.0-2 build. The fork suite also signs the fee inside the EIP-712 struct: a stored fee that no longer equals the signed fee reverts with `FeeMismatch`, moves no USDC, and does not consume the digest; restoring the stored fee lets that signature pull exactly `10000` base units. No transaction was broadcast and no real USDC moved.
+
 `arc-anvil` versus a plain anvil process: this suite did not start either one. `arc-forge test --network arc` ran the tests in-process. The Arc Foundry docs say a bare test command runs Ethereum rules, and the Arc docs say a plain anvil cannot reproduce Arc. A side-by-side against upstream Foundry was not run. Treat that comparison as UNVERIFIED. Use `arc-forge test --network arc` for this project. For a local chain, the documented command is `arc-anvil --network arc`.
 
 Node checks, including the shared vector and the deploy-script guards:
