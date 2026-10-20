@@ -72,6 +72,8 @@ export function skipReason(url, { includeSelf = false } = {}) {
   if (/(^|\.)example\.(com|org|net)$/.test(h) || /\.(test|local|invalid|example|localhost)$/.test(h)) return 'example or reserved host';
   if (/OWNER|YOUR[_-]/.test(url)) return 'placeholder';
   if (!includeSelf && SELF.test(url)) return 'this repo (unpublished)';
+  // Default bases for the onboarding chat client. A bare GET is 404; they are not documentation pages.
+  if (h === 'api.openai.com' || h === 'api.anthropic.com') return 'provider API, not a document page';
   return null;
 }
 

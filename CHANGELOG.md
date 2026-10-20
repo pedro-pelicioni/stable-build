@@ -29,6 +29,7 @@ Every release does three things:
 
 ### Changed
 
+- Link check skips `api.openai.com` and `api.anthropic.com`. Those hosts are the onboarding chat client's default API bases, and a bare GET returns 404. Documentation links under `apps/onboarding` are still fetched.
 - Go-live registry: the EIP-712 `Registration` struct now includes the fee, and `register` reverts with `FeeMismatch` unless that signed fee equals the stored fee. A `setFee` after signing no longer changes what an outstanding signature pays. The global `usedNonce` set is gone; replay protection is `usedDigest`, so the same nonce can be used for another project or another payload.
 - Program data: Arc Microgrants round 2 ("Built with Arc Studio", DoraHacks, deadline 2026-11-02 04:59 UTC, one track All Builds) is in `programs.json`. Round 1 stays, with `applications_closed` at the old deadline and `valid_until` moved to the decision date (2026-10-21), because the file has no archive flag and the data check rejects a passed `valid_until`. Tameion Agents Hackathon is removed: its event page says it finished on 2026-10-10 and names no later date, which is what failed the 2026-10-12 data run. `find-idea` and the go-live G14 checklist follow the round 2 requirements.
 - Persona names: Sam is now the architect and leads the plan, and Tim is the analyst ("Tim, what should I build on Arc?"), so the team lead matches the people's roles in the Arc community. The skills, the guide, both READMEs, the landing page and the installer's closing lines follow.
