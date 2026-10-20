@@ -178,6 +178,18 @@ Uma verificação apenas informativa que roda depois de cada Write/Edit (Claude 
 
 O trecho da documentação e a data `verified_at` de cada regra estão em [`data/gotchas.json`](plugins/stable-build/data/gotchas.json). Toda semana a CI confere cada trecho com a página publicada e abre uma issue quando algum deles muda.
 
+## Registro de go-live
+
+Um projeto que passa nas 14 checagens de go-live pode gravar um selo na Arc. O contrato, o assinador e os scripts de deploy estão neste repositório. Eles não enviam transação a menos que você mesmo passe `--broadcast`. Especificação, passos no Studio e a demonstração na mainnet: [docs/go-live-registry.md](docs/go-live-registry.md).
+
+```sh
+node tools/go-live-sign.mjs --help
+```
+
+```sh
+cd contracts/go-live-registry && arc-forge test --network arc
+```
+
 ## Desinstalação
 
 Se você usou o instalador:

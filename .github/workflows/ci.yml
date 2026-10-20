@@ -231,3 +231,26 @@ jobs:
           npm test
           npm run build
           node "$GITHUB_WORKSPACE/plugins/stable-build/scripts/guard.mjs" --scan .
+
+  registry:
+    name: go-live registry
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Arc Foundry v0.8.0-2
+        run: |
+          set -euo pipefail
+          dest="$RUNNER_TEMP/arc-foundry"
+          bash contracts/go-live-registry/script/install-arc-foundry.sh "$dest"
+          echo "$dest" >> "$GITHUB_PATH"
+
+      - name: arc-forge test --network arc
+        working-directory: contracts/go-live-registry
+        run: arc-forge test --network arc

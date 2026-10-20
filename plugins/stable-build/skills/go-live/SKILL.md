@@ -128,6 +128,10 @@ With `pt-BR` saved (see **Language**), write the report's headings and prose in 
 | G13 | Keys, monitoring, screening that includes Memo and Multicall3From | https://docs.arc.io/arc/references/contract-addresses |
 | G14 | No affiliation claims; Arc marks per the Brand Kit; program requirements | https://docs.arc.io/terms |
 
+## On-chain badge
+
+This skill still never signs or deploys. A separate tool, `node tools/go-live-sign.mjs`, hashes `docs/go-live-report.md` and can sign a badge for the registry in `contracts/go-live-registry`. A human runs it, and a human sends the transaction. The spec is `docs/go-live-registry.md` at the repository root (from this skill, `../../../../docs/go-live-registry.md`).
+
 ## Language
 
 Before your first reply in a session, read the saved language once: `cat "${STABLE_BUILD_HOME:-$HOME/.stable-build}/config.json" 2>/dev/null`. If it sets `"language"`, write everything the user reads in that language (`pt-BR` is Brazilian Portuguese, `en` is English): replies, questions, menus, tables and the documents you generate, such as reports, briefs, PRDs, stories and idea lists. With no saved language, use the user's language. Wherever this skill says "the user's language", it means this choice. Keep code, identifiers, file names, paths, frontmatter keys and status values, rule ids, commands, CLI flags, commit messages and verbatim docs quotes in English.

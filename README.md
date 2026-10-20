@@ -178,6 +178,18 @@ An advisory check that runs after each Write/Edit (Claude Code) or apply_patch (
 
 Each rule's docs quote and `verified_at` date are in [`data/gotchas.json`](plugins/stable-build/data/gotchas.json). CI checks every quote against the live docs page weekly and opens an issue when one drifts.
 
+## Go-live registry
+
+A project that passes the 14 go-live gates can record a badge on Arc. The contract, the signer and the deploy scripts are in this repo. They do not broadcast unless you pass `--broadcast` yourself. Spec, Studio steps and the mainnet demo: [docs/go-live-registry.md](docs/go-live-registry.md).
+
+```sh
+node tools/go-live-sign.mjs --help
+```
+
+```sh
+cd contracts/go-live-registry && arc-forge test --network arc
+```
+
 ## Uninstall
 
 If you used the installer:

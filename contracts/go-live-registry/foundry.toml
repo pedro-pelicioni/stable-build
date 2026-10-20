@@ -1,0 +1,19 @@
+[profile.default]
+src = "src"
+out = "out"
+script = "script"
+test = "test"
+libs = []
+solc = "0.8.28"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+fs_permissions = [{ access = "read", path = "./test/vectors" }]
+
+# Arc Foundry: `network = "arc"` selects Arc execution (precompiles, fee floor).
+# A bare `arc-forge test` in this folder follows this profile only when it is the
+# default. CI and the docs pass `--network arc` explicitly.
+network = "arc"
+
+[profile.arc]
+network = "arc"

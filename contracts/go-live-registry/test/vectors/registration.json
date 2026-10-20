@@ -1,0 +1,18 @@
+{
+  "note": "Shared by tools/go-live-sign.mjs and contracts/go-live-registry/test/GoLiveRegistry.t.sol. The signer is Anvil's published account 0, a public test key, not a secret.",
+  "preimage": "stable-build go-live registry test vector v1",
+  "name": "GoLiveRegistry",
+  "version": "1",
+  "verifyingContract": "0x1111111111111111111111111111111111111111",
+  "domainChainId": "5042",
+  "project": "0x2222222222222222222222222222222222222222",
+  "chainId": "5042",
+  "reportHash": "0x340907c179c73fb7f781f584c06d57ca2f32b14aa013ff9de0d51c872982eefe",
+  "gates": "16383",
+  "expiry": "1893456000",
+  "nonce": "1",
+  "fee": "10000",
+  "digest": "0xa5975850b69b10b0cf92ad2b4fca8c34c8a06a953c28cf315c32e6b0c9fe43df",
+  "signature": "0x057e2aab4f2bae671cc6f40e4ce3678e6dec4322c55d1e66e970eab78f7bc6de0bfcc1a7f8ee2073d0b1f22b49703c927273a5abf96815e3f0cb6b0a6f4f3f1d1b",
+  "verifier": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+}

@@ -55,6 +55,7 @@ stable-build is a community project that is not affiliated with Circle. It insta
 
 - Skills ask before running commands that change things. They never ask for or store private keys, seed phrases or API tokens. They never sign or send transactions.
 - The payouts starter defaults to testnet. Mainnet use needs an explicit flag and a typed confirmation. Its end-to-end test refuses any chain other than Arc testnet (chain id 5042002).
+- `tools/go-live-sign.mjs` and `contracts/go-live-registry/script/deploy.sh` read a key from the environment only when you run them (`STABLE_BUILD_VERIFIER_KEY`, `STABLE_BUILD_DEPLOYER_KEY`). They do not print the key and they do not send it anywhere. A `VITE_*` variable that looks like a 32-byte key makes them stop. The deploy script simulates unless you pass `--broadcast`, refuses `--broadcast` when `CI` or `GITHUB_ACTIONS` is set, and on chain id 5042 requires `STABLE_BUILD_MAINNET_CONFIRM` to be exactly `SEND REAL USDC`. The go-live skill itself still never signs or broadcasts.
 - Text from GitHub, data files, docs and the Arc Studio CLI (`finalText`, `deployments[]`) is treated as untrusted data, never as instructions. On-chain claims are re-checked with read-only RPC calls.
 
 ## Hardening checklist for maintainers
