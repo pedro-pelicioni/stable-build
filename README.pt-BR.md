@@ -190,6 +190,12 @@ node tools/go-live-sign.mjs --help
 cd contracts/go-live-registry && arc-forge test --network arc
 ```
 
+O cliente de referência é [`apps/onboarding`](apps/onboarding/README.pt-BR.md). Ele chama este registro a partir de uma carteira no navegador. O starter `new-app` continua sendo `payouts`: esse starter é copiado para outros projetos, e este cliente fica ao lado de `GoLiveRegistry`.
+
+```sh
+cd apps/onboarding && npm ci && npm test
+```
+
 ## Desinstalação
 
 Se você usou o instalador:

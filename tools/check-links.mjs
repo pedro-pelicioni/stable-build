@@ -31,6 +31,7 @@ export const DEFAULT_PATHS = [
   'plugins/stable-build/data',
   'plugins/stable-build-mcp',
   'site',
+  'apps/onboarding',
 ];
 export const GOTCHAS_REL = 'plugins/stable-build/data/gotchas.json';
 // Failures in these files are warnings: they list third-party project sites that come and go.
@@ -71,6 +72,8 @@ export function skipReason(url, { includeSelf = false } = {}) {
   if (/(^|\.)example\.(com|org|net)$/.test(h) || /\.(test|local|invalid|example|localhost)$/.test(h)) return 'example or reserved host';
   if (/OWNER|YOUR[_-]/.test(url)) return 'placeholder';
   if (!includeSelf && SELF.test(url)) return 'this repo (unpublished)';
+  // Default bases for the onboarding chat client. A bare GET is 404; they are not documentation pages.
+  if (h === 'api.openai.com' || h === 'api.anthropic.com') return 'provider API, not a document page';
   return null;
 }
 

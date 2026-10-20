@@ -383,6 +383,8 @@ describe('tools/check-links.mjs helpers', () => {
     assert.equal(skipReason('https://github.com/pedro-pelicioni/stable-build/blob/main/README.md'), 'this repo (unpublished)');
     assert.equal(skipReason('https://github.com/pedro-pelicioni/stable-build', { includeSelf: true }), null);
     assert.equal(skipReason('https://docs.arc.io/arc/references/rpc-endpoints'), null);
+    assert.equal(skipReason('https://api.openai.com/v1'), 'provider API, not a document page');
+    assert.equal(skipReason('https://api.anthropic.com'), 'provider API, not a document page');
   });
 
   test('bare origins in preconnect hints and CSP sources are not fetched; pages are', () => {

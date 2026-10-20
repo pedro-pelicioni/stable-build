@@ -1,6 +1,7 @@
-// Tests for tools/check-docs-sync.mjs: translated docs (README.pt-BR.md and the payouts starter's
-// README.pt-BR.md) must mirror their English originals: same heading outline, identical code
-// blocks, cross-links at the top, and in-page anchors that resolve.
+// Tests for tools/check-docs-sync.mjs: translated docs (README.pt-BR.md, the payouts starter's
+// README.pt-BR.md and the onboarding client's README.pt-BR.md) must mirror their English
+// originals: same heading outline, identical code blocks, cross-links at the top, and in-page
+// anchors that resolve.
 // Run: node --test test/skills/check-docs-sync.test.mjs
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -93,10 +94,11 @@ describe('check-docs-sync: the repo', () => {
     assert.equal(res.ok, true);
   });
 
-  test('covers the root README and the payouts starter README', () => {
+  test('covers the root README, the payouts starter README and the onboarding client README', () => {
     const originals = PAIRS.map((p) => p.original);
     assert.ok(originals.includes('README.md'));
     assert.ok(originals.includes('plugins/stable-build/skills/new-app/templates/payouts/README.md'));
+    assert.ok(originals.includes('apps/onboarding/README.md'));
     for (const p of PAIRS) assert.match(p.translation, /README\.pt-BR\.md$/);
   });
 
@@ -266,13 +268,13 @@ describe('check-docs-sync: CLI', () => {
   test('exit 0 when in sync, 1 when not, with --json output', () => {
     const good = cli('--root', layout());
     assert.equal(good.status, 0, good.stdout + good.stderr);
-    assert.match(good.stdout, /2 pair\(s\); 0 failure\(s\), 0 warning\(s\)/);
+    assert.match(good.stdout, new RegExp(`${PAIRS.length} pair\\(s\\); 0 failure\\(s\\), 0 warning\\(s\\)`));
 
     const bad = cli(`--root=${layout((s) => s.replace('npm test', 'npm run test'))}`, '--json');
     assert.equal(bad.status, 1);
     const res = JSON.parse(bad.stdout);
     assert.equal(res.ok, false);
-    assert.equal(res.failures.length, 2);
+    assert.equal(res.failures.length, PAIRS.length);
     assert.ok(res.failures.every((f) => f.kind === 'code-block'));
   });
 

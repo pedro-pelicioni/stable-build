@@ -30,6 +30,11 @@ export const PAIRS = [
     translation: 'plugins/stable-build/skills/new-app/templates/payouts/README.pt-BR.md',
     lang: 'pt-BR',
   },
+  {
+    original: 'apps/onboarding/README.md',
+    translation: 'apps/onboarding/README.pt-BR.md',
+    lang: 'pt-BR',
+  },
 ];
 
 /** The cross-link must appear within this many lines from the top of each file. */
